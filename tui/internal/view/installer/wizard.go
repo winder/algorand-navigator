@@ -1,17 +1,26 @@
 package installer
 
 import (
+	_ "embed"
 	"fmt"
-	"os"
-
 	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"os"
+	"os/exec"
+	"path"
 
 	"github.com/algorand/node-ui/tui/internal/view"
 )
+
+type DataDirReady struct {
+	DataDir string
+}
+
+//go:embed update.sh
+var updateScript string
 
 var enter = key.NewBinding(
 	key.WithKeys("enter"),
@@ -27,6 +36,7 @@ type WizardModel struct {
 	// answers
 	network    int
 	installDir string
+	progress   string
 }
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -96,6 +106,17 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 		case key.Matches(msg, view.InstallerKeys.No):
 			return m, tea.Quit
 		}
+	case installProgress:
+		if msg.err != nil {
+			fmt.Println(msg.err)
+			return m, tea.Quit
+		}
+		m.progress = msg.msg
+		if msg.done {
+			return m, func() tea.Msg {
+				return DataDirReady{DataDir: msg.datadir}
+			}
+		}
 	}
 
 	// Need to update the submodules first to ensure the right file is "picked"
@@ -128,14 +149,46 @@ func (m WizardModel) View() string {
 		return istyle.Render(fmt.Sprintf("Do you want to install?\n\ndata directory: %s/nodeui_algod_data\nbin directory: %s/nodeui_algod_bin\n\nNetwork: %s\n\n Press [y]es or [n]o.",
 			m.installDir, m.installDir, m.list.SelectedItem().FilterValue()))
 	default:
-		return istyle.Render("installing!")
+		return istyle.Render("installing!", "\n\n", "Progress: ", m.progress)
 	}
 }
 
-type InstallProgressCmd string
+type installProgress struct {
+	msg     string
+	err     error
+	done    bool
+	datadir string
+}
 
 func installAndStartNode(rootDir, network string) tea.Cmd {
-	return func() tea.Msg {
-		return InstallProgressCmd("done")
+	data := path.Join(rootDir, "nodeui_algod_data")
+	bin := path.Join(rootDir, "nodeui_algod_bin")
+	err := os.Mkdir(data, 0755)
+	if err != nil {
+		return func() tea.Msg {
+			return installProgress{msg: "failed to create data dir", err: err}
+		}
 	}
+	err = os.Mkdir(bin, 0755)
+	if err != nil {
+		return func() tea.Msg {
+			return installProgress{msg: "failed to create bin dir", err: err}
+		}
+	}
+	err = os.WriteFile(path.Join(bin, "update.sh"), []byte(updateScript), 0755)
+	if err != nil {
+		return func() tea.Msg {
+			return installProgress{msg: "failed to write update.sh", err: err}
+		}
+	}
+
+	return tea.Batch(
+		func() tea.Msg {
+			return installProgress{msg: "Running update.sh", err: nil}
+		},
+		func() tea.Msg {
+			c := exec.Command(fmt.Sprintf("%s/update.sh", bin), "-i", "-c", "stable", "-p", bin, "-d", data, "-i", "-g", network)
+			out, err := c.CombinedOutput()
+			return installProgress{msg: fmt.Sprintf("Finished running update.sh! \n%s\n" + string(out)), err: err, done: true, datadir: data}
+		})
 }

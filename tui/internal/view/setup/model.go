@@ -16,6 +16,7 @@ import (
 
 type Model struct {
 	runnable  bool
+	args      args.Arguments
 	installer installer.Model
 	app       app.Model
 	Footer    tea.Model
@@ -54,6 +55,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
+	case installer.DataDirReady:
+		requestor, err := getRequestor(msg.DataDir, "", "", "")
+		if err == nil {
+			addresses := getAddressesOrExit(m.args.AddressWatchList)
+			m.app = app.New(constants.InitialWidth, constants.InitialHeight, requestor, addresses)
+			m.runnable = true
+			return m, m.app.Init()
+		}
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, view.AppKeys.Quit):
