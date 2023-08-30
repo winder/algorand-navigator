@@ -148,14 +148,6 @@ func (m Model) nextBlockCmd(round uint64) tea.Cmd {
 	}
 }
 
-func (m *Model) setError(err error) {
-	// add error
-	if err != nil {
-		m.errCnt++
-	}
-	m.err = err
-}
-
 func (m *Model) setSize(width, height int) {
 	m.width = width
 	m.height = height
@@ -218,14 +210,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case BlocksMsg:
 		next := uint64(0)
 
+		// report the error and wait 1 second before the next attempt.
 		if msg.Err != nil {
 			next = m.statusRound
-			m.setError(msg.Err)
+			m.errCnt++
+			m.err = msg.Err
+
 			return m, tea.Tick(1*time.Second, func(time.Time) tea.Msg {
 				return m.nextBlockCmd(next)()
 			})
 		}
-		m.setError(nil)
+		m.err = nil
+
 		// append Blocks
 		backup := m.blocks
 		m.blocks = msg.Blocks
