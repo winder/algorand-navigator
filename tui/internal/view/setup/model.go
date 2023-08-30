@@ -45,6 +45,7 @@ func (m Model) Init() tea.Cmd {
 	// else.... installer
 	return tea.Batch(
 		tea.EnterAltScreen,
+		m.installer.Init(),
 	)
 }
 
@@ -56,6 +57,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, view.AppKeys.Quit):
+			fallthrough
+		case key.Matches(msg, view.InstallerKeys.Quit):
 			return m, tea.Quit
 		}
 	}

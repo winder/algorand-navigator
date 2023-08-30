@@ -14,7 +14,7 @@ type InstallerKeyMap struct {
 
 // ShortHelp implements the InstallerKeyMap interface.
 func (k *InstallerKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Forward, k.Back, k.Generic, k.Quit, k.Help}
+	return []key.Binding{k.Install, k.Generic, k.Quit, k.Help}
 }
 
 // FullHelp implements the InstallerKeyMap interface.
@@ -22,10 +22,11 @@ func (k *InstallerKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{k.ShortHelp()}
 }
 
-// Keys is a global for accessing the InstallerKeyMap.
-var Keys = &InstallerKeyMap{
+// InstallerKeys is a global for accessing the InstallerKeyMap.
+var InstallerKeys = &InstallerKeyMap{
 	// Not sure how to group help together.
 	Install: key.NewBinding(
+		key.WithKeys("i"),
 		key.WithHelp("i", "install")),
 	Generic: key.NewBinding(
 		key.WithHelp("↑/↓", "navigate")),
