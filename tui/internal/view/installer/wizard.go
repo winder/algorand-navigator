@@ -1,6 +1,7 @@
 package installer
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/charmbracelet/bubbles/filepicker"
@@ -25,8 +26,7 @@ type WizardModel struct {
 
 	// answers
 	network    int
-	installDir string // bubbles/filepicker ?
-
+	installDir string
 }
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -89,6 +89,12 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 			if m.question == 1 {
 				m.installDir = ""
 			}
+		case key.Matches(msg, view.InstallerKeys.Yes):
+			m.question++
+			cmds = append(cmds, installAndStartNode(m.installDir, m.list.SelectedItem().FilterValue()))
+
+		case key.Matches(msg, view.InstallerKeys.No):
+			return m, tea.Quit
 		}
 	}
 
@@ -106,6 +112,9 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 		m.installDir = path
 	}
 
+	view.InstallerKeys.Yes.SetEnabled(m.question == 2)
+	view.InstallerKeys.No.SetEnabled(m.question == 2)
+
 	return m, tea.Batch(cmds...)
 }
 
@@ -115,7 +124,18 @@ func (m WizardModel) View() string {
 		return m.list.View()
 	case 1:
 		return m.filepicker.View()
+	case 2:
+		return istyle.Render(fmt.Sprintf("Do you want to install?\n\ndata directory: %s/nodeui_algod_data\nbin directory: %s/nodeui_algod_bin\n\nNetwork: %s\n\n Press [y]es or [n]o.",
+			m.installDir, m.installDir, m.list.SelectedItem().FilterValue()))
 	default:
-		return m.installDir + " " + m.list.SelectedItem().FilterValue()
+		return istyle.Render("installing!")
+	}
+}
+
+type InstallProgressCmd string
+
+func installAndStartNode(rootDir, network string) tea.Cmd {
+	return func() tea.Msg {
+		return InstallProgressCmd("done")
 	}
 }

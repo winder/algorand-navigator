@@ -5,6 +5,8 @@ import "github.com/charmbracelet/bubbles/key"
 // InstallerKeyMap contains references to all the key bindings.
 type InstallerKeyMap struct {
 	Generic key.Binding
+	Yes     key.Binding
+	No      key.Binding
 	Quit    key.Binding
 	Install key.Binding
 	Forward key.Binding
@@ -14,7 +16,7 @@ type InstallerKeyMap struct {
 
 // ShortHelp implements the InstallerKeyMap interface.
 func (k *InstallerKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Install, k.Generic, k.Quit, k.Help}
+	return []key.Binding{k.Install, k.Yes, k.No, k.Generic, k.Quit, k.Help}
 }
 
 // FullHelp implements the InstallerKeyMap interface.
@@ -28,6 +30,14 @@ var InstallerKeys = &InstallerKeyMap{
 	Install: key.NewBinding(
 		key.WithKeys("i"),
 		key.WithHelp("i", "install")),
+	Yes: key.NewBinding(
+		key.WithKeys("y"),
+		key.WithHelp("y", "yes"),
+		key.WithDisabled()),
+	No: key.NewBinding(
+		key.WithKeys("n"),
+		key.WithHelp("n", "no"),
+		key.WithDisabled()),
 	Generic: key.NewBinding(
 		key.WithHelp("↑/↓", "navigate")),
 	Help: key.NewBinding(
