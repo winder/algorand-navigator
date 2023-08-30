@@ -19,12 +19,16 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/types"
 
 	"github.com/algorand/node-ui/messages"
-	"github.com/algorand/node-ui/tui/internal/model"
+	"github.com/algorand/node-ui/tui/internal/bubbles/app"
 )
 
-const host = "0.0.0.0"
+const (
+	initialWidth  = 80
+	initialHeight = 50
+	host          = "0.0.0.0"
+)
 
-func getTeaHandler(model model.Model) bm.Handler {
+func getTeaHandler(model app.Model) bm.Handler {
 	return func(_ ssh.Session) (tea.Model, []tea.ProgramOption) {
 		return model, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
 	}
@@ -32,7 +36,7 @@ func getTeaHandler(model model.Model) bm.Handler {
 
 // Start ...
 func Start(port uint64, requestor *messages.Requestor, addresses []types.Address) {
-	model := model.New(requestor, addresses)
+	model := app.New(initialWidth, initialHeight, requestor, addresses)
 
 	// Run directly
 	if port == 0 {

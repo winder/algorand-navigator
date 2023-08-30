@@ -1,11 +1,7 @@
-package model
+package app
 
 import (
-	"github.com/charmbracelet/bubbles/help"
-	tea "github.com/charmbracelet/bubbletea"
-
 	"github.com/algorand/go-algorand-sdk/v2/types"
-
 	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui/internal/bubbles/about"
 	"github.com/algorand/node-ui/tui/internal/bubbles/accounts"
@@ -15,11 +11,8 @@ import (
 	"github.com/algorand/node-ui/tui/internal/bubbles/status"
 	"github.com/algorand/node-ui/tui/internal/bubbles/tabs"
 	"github.com/algorand/node-ui/tui/internal/style"
-)
-
-const (
-	initialWidth  = 80
-	initialHeight = 50
+	"github.com/charmbracelet/bubbles/help"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type activeComponent int
@@ -56,7 +49,7 @@ type Model struct {
 }
 
 // New initializes the TUI.
-func New(requestor *messages.Requestor, addresses []types.Address) Model {
+func New(initialWidth, initialHeight int, requestor *messages.Requestor, addresses []types.Address) Model {
 	styles := style.DefaultStyles()
 	tab := tabs.New([]string{"EXPLORER", "UTILITIES", "ACCOUNTS", "CONFIGURATION", "HELP"})
 	// The tab content is the only flexible element.
