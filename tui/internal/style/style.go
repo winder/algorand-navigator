@@ -10,6 +10,9 @@ import (
 const (
 	// TopHeight is the hard coded height of the top bubbles.
 	TopHeight = 13
+
+	// FooterHeight is the help + status bar
+	FooterHeight = 2
 )
 
 // Styles defines styles for the TUI.

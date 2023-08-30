@@ -52,8 +52,7 @@ func New(initialWidth, initialHeight int, requestor *messages.Requestor, address
 	// This means the height must grow or shrink to fill the available
 	// window height. It has access to the absolute height but needs to
 	// be informed about the space used by other elements.
-	footerHeight := 2 // help + status bar
-	tabContentMargin := style.TopHeight + tab.Height() + footerHeight
+	tabContentMargin := style.TopHeight + tab.Height() + style.FooterHeight
 	return Model{
 		active:        explorerTab,
 		styles:        styles,

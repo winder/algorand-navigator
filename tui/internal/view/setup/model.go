@@ -11,13 +11,15 @@ import (
 	"github.com/algorand/node-ui/tui/internal/constants"
 	"github.com/algorand/node-ui/tui/internal/style"
 	"github.com/algorand/node-ui/tui/internal/view/app"
+	"github.com/algorand/node-ui/tui/internal/view/installer"
 )
 
 type Model struct {
-	runnable bool
-	help     help.Model
-	app      app.Model
-	Footer   tea.Model
+	runnable  bool
+	installer installer.Model
+	help      help.Model
+	app       app.Model
+	Footer    tea.Model
 }
 
 func New(args args.Arguments) (m Model) {
@@ -27,6 +29,7 @@ func New(args args.Arguments) (m Model) {
 		m.app = app.New(constants.InitialWidth, constants.InitialHeight, requestor, addresses)
 		m.runnable = true
 	}
+	m.installer = installer.New(constants.InitialHeight, constants.InitialWidth, style.FooterHeight)
 	m.Footer = footer.New(style.DefaultStyles())
 	m.help = help.New()
 	constants.Keys.SetRunnable(m.runnable)
@@ -60,6 +63,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	m.installer, cmd = m.installer.Update(msg)
+	cmds = append(cmds, cmd)
+
 	m.help, cmd = m.help.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -79,7 +85,7 @@ func (m Model) View() string {
 	if m.runnable {
 		primary = m.app.View()
 	} else {
-		primary = "Installer"
+		primary = m.installer.View()
 	}
 	return lipgloss.JoinVertical(0,
 		primary,
