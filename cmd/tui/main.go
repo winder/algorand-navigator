@@ -113,7 +113,7 @@ func makeCommand() *cli.Command {
 	}
 }
 
-func getRequestorOrExit(algodDataDir, url, token, adminToken string) *messages.Requestor {
+func getRequestor(algodDataDir, url, token, adminToken string) (*messages.Requestor, error) {
 	// Initialize from -d, ALGORAND_DATA, or provided URL/Token
 
 	if algodDataDir != "" && (url != "" || token != "") {
@@ -122,12 +122,7 @@ func getRequestorOrExit(algodDataDir, url, token, adminToken string) *messages.R
 	}
 
 	// If url/token are missing, attempt to use environment variable.
-	if url == "" && token == "" {
-		if algodDataDir == "" {
-			fmt.Fprintln(os.Stderr, "Algod is not available.\nMust provide url and token with -u/-t or a data directory with -d or the ALGORAND_DATA environment variable.")
-			os.Exit(1)
-		}
-
+	if algodDataDir != "" {
 		netpath := filepath.Join(algodDataDir, "algod.net")
 		tokenpath := filepath.Join(algodDataDir, "algod.token")
 		adminTokenpath := filepath.Join(algodDataDir, "algod.admin.token")
@@ -135,8 +130,7 @@ func getRequestorOrExit(algodDataDir, url, token, adminToken string) *messages.R
 		var netaddrbytes []byte
 		netaddrbytes, err := os.ReadFile(netpath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to read URL from file (%s): %s\n", netpath, err.Error())
-			os.Exit(1)
+			return nil, fmt.Errorf("Unable to read URL from file (%s): %s\n", netpath, err.Error())
 		}
 		url = strings.TrimSpace(string(netaddrbytes))
 
@@ -155,16 +149,24 @@ func getRequestorOrExit(algodDataDir, url, token, adminToken string) *messages.R
 		adminToken = string(adminTokenBytes)
 	}
 
+	if url == "" || token == "" {
+		return nil, fmt.Errorf("must provide a way to get the algod REST API")
+	}
+
 	if !strings.HasPrefix(url, "http") {
 		url = "http://" + url
 	}
 
-	if url == "" || token == "" {
-		fmt.Fprintln(os.Stderr, "Must provide a way to get the algod REST API.")
+	return messages.MakeRequestor(url, token, adminToken, algodDataDir), nil
+}
+
+func getRequestorOrExit(algodDataDir, url, token, adminToken string) *messages.Requestor {
+	requestor, err := getRequestor(algodDataDir, url, token, adminToken)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Problem creating requestor: %s.\n", err.Error())
 		os.Exit(1)
 	}
-
-	return messages.MakeRequestor(url, token, adminToken, algodDataDir)
+	return requestor
 }
 
 func getAddressesOrExit(addrs []string) (result []types.Address) {
