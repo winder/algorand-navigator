@@ -1,9 +1,9 @@
-package constants
+package view
 
 import "github.com/charmbracelet/bubbles/key"
 
-// KeyMap contains references to all the key bindings.
-type KeyMap struct {
+// AppKeyMap contains references to all the key bindings.
+type AppKeyMap struct {
 	Generic      key.Binding
 	Quit         key.Binding
 	Catchup      key.Binding
@@ -14,23 +14,18 @@ type KeyMap struct {
 	Help         key.Binding
 }
 
-// ShortHelp implements the KeyMap interface.
-func (k KeyMap) ShortHelp() []key.Binding {
+// ShortHelp implements the AppKeyMap interface.
+func (k *AppKeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{k.Section, k.Forward, k.Back, k.Generic, k.Quit, k.Help}
 }
 
-// FullHelp implements the KeyMap interface.
-func (k KeyMap) FullHelp() [][]key.Binding {
+// FullHelp implements the AppKeyMap interface.
+func (k *AppKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{k.ShortHelp()}
 }
 
-func (k KeyMap) SetRunnable(runnable bool) {
-	k.Catchup.SetEnabled(runnable)
-	k.AbortCatchup.SetEnabled(runnable)
-}
-
-// Keys is a global for accessing the KeyMap.
-var Keys = KeyMap{
+// AppKeys is a global for accessing the AppKeyMap.
+var AppKeys = &AppKeyMap{
 	// Not sure how to group help together.
 	Generic: key.NewBinding(
 		key.WithHelp("↑/↓", "navigate")),

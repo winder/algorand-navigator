@@ -7,7 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/algorand/node-ui/messages"
-	"github.com/algorand/node-ui/tui/internal/constants"
+	"github.com/algorand/node-ui/tui/internal/view"
 )
 
 func networkFromID(genesisID string) string {
@@ -27,11 +27,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, constants.Keys.Catchup):
+		case key.Matches(msg, view.AppKeys.Catchup):
 			return m, m.requestor.StartFastCatchup(networkFromID(m.network.GenesisID))
-		case key.Matches(msg, constants.Keys.AbortCatchup):
+		case key.Matches(msg, view.AppKeys.AbortCatchup):
 			return m, m.requestor.StopFastCatchup(networkFromID(m.network.GenesisID))
-		case key.Matches(msg, constants.Keys.Section):
+		case key.Matches(msg, view.AppKeys.Section):
 			m.active++
 			m.active %= 5
 			m.Tabs.SetActiveIndex(int(m.active))

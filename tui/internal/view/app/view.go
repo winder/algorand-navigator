@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/algorand/node-ui/tui/internal/view"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/indent"
 )
@@ -50,5 +51,6 @@ func (m Model) View() string {
 			m.Status.View(),
 			art()),
 		m.Tabs.View(),
-		m.tabView())
+		m.tabView(),
+		m.help.View(view.AppKeys))
 }

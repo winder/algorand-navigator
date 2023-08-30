@@ -1,7 +1,6 @@
 package setup
 
 import (
-	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -10,6 +9,7 @@ import (
 	"github.com/algorand/node-ui/tui/internal/bubbles/footer"
 	"github.com/algorand/node-ui/tui/internal/constants"
 	"github.com/algorand/node-ui/tui/internal/style"
+	"github.com/algorand/node-ui/tui/internal/view"
 	"github.com/algorand/node-ui/tui/internal/view/app"
 	"github.com/algorand/node-ui/tui/internal/view/installer"
 )
@@ -17,7 +17,6 @@ import (
 type Model struct {
 	runnable  bool
 	installer installer.Model
-	help      help.Model
 	app       app.Model
 	Footer    tea.Model
 }
@@ -31,8 +30,6 @@ func New(args args.Arguments) (m Model) {
 	}
 	m.installer = installer.New(constants.InitialHeight, constants.InitialWidth, style.FooterHeight)
 	m.Footer = footer.New(style.DefaultStyles())
-	m.help = help.New()
-	constants.Keys.SetRunnable(m.runnable)
 	return m
 }
 
@@ -58,15 +55,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, constants.Keys.Quit):
+		case key.Matches(msg, view.AppKeys.Quit):
 			return m, tea.Quit
 		}
 	}
 
 	m.installer, cmd = m.installer.Update(msg)
-	cmds = append(cmds, cmd)
-
-	m.help, cmd = m.help.Update(msg)
 	cmds = append(cmds, cmd)
 
 	m.Footer, cmd = m.Footer.Update(msg)
@@ -89,6 +83,5 @@ func (m Model) View() string {
 	}
 	return lipgloss.JoinVertical(0,
 		primary,
-		m.help.View(constants.Keys),
 		m.Footer.View())
 }

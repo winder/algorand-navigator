@@ -11,8 +11,8 @@ const (
 	// TopHeight is the hard coded height of the top bubbles.
 	TopHeight = 13
 
-	// FooterHeight is the help + status bar
-	FooterHeight = 2
+	// FooterHeight is the global status bar
+	FooterHeight = 1
 )
 
 // Styles defines styles for the TUI.

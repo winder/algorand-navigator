@@ -10,6 +10,7 @@ import (
 	"github.com/algorand/node-ui/tui/internal/bubbles/status"
 	"github.com/algorand/node-ui/tui/internal/bubbles/tabs"
 	"github.com/algorand/node-ui/tui/internal/style"
+	"github.com/charmbracelet/bubbles/help"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -32,6 +33,7 @@ type Model struct {
 	Configs       tea.Model
 	Utilities     tea.Model
 	About         tea.Model
+	help          help.Model
 
 	network messages.NetworkMsg
 
@@ -52,7 +54,8 @@ func New(initialWidth, initialHeight int, requestor *messages.Requestor, address
 	// This means the height must grow or shrink to fill the available
 	// window height. It has access to the absolute height but needs to
 	// be informed about the space used by other elements.
-	tabContentMargin := style.TopHeight + tab.Height() + style.FooterHeight
+	// +1 for the help
+	tabContentMargin := style.TopHeight + tab.Height() + style.FooterHeight + 1
 	return Model{
 		active:        explorerTab,
 		styles:        styles,
@@ -63,6 +66,7 @@ func New(initialWidth, initialHeight int, requestor *messages.Requestor, address
 		Accounts:      accounts.New(styles, requestor, initialHeight, tabContentMargin, addresses),
 		About:         about.New(tabContentMargin, about.GetHelpContent()),
 		Utilities:     about.New(tabContentMargin, about.GetUtilsContent()),
+		help:          help.New(),
 		requestor:     requestor,
 	}
 }

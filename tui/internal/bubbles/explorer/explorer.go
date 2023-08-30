@@ -16,8 +16,8 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 
 	"github.com/algorand/node-ui/messages"
-	"github.com/algorand/node-ui/tui/internal/constants"
 	"github.com/algorand/node-ui/tui/internal/style"
+	"github.com/algorand/node-ui/tui/internal/view"
 )
 
 type state int
@@ -165,7 +165,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		// navigate into explorer views
 		switch {
-		case key.Matches(msg, constants.Keys.Forward):
+		case key.Matches(msg, view.AppKeys.Forward):
 			switch m.state {
 			case blockState:
 				// Select transactions.
@@ -188,7 +188,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		// navigate out of explorer views
-		case key.Matches(msg, constants.Keys.Back):
+		case key.Matches(msg, view.AppKeys.Back):
 			switch m.state {
 			case paysetState:
 				m.state = blockState
