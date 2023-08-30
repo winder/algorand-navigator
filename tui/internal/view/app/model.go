@@ -7,11 +7,9 @@ import (
 	"github.com/algorand/node-ui/tui/internal/bubbles/accounts"
 	"github.com/algorand/node-ui/tui/internal/bubbles/configs"
 	"github.com/algorand/node-ui/tui/internal/bubbles/explorer"
-	"github.com/algorand/node-ui/tui/internal/bubbles/footer"
 	"github.com/algorand/node-ui/tui/internal/bubbles/status"
 	"github.com/algorand/node-ui/tui/internal/bubbles/tabs"
 	"github.com/algorand/node-ui/tui/internal/style"
-	"github.com/charmbracelet/bubbles/help"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -34,8 +32,6 @@ type Model struct {
 	Configs       tea.Model
 	Utilities     tea.Model
 	About         tea.Model
-	Help          help.Model
-	Footer        tea.Model
 
 	network messages.NetworkMsg
 
@@ -66,8 +62,6 @@ func New(initialWidth, initialHeight int, requestor *messages.Requestor, address
 		BlockExplorer: explorer.New(styles, requestor, initialWidth, 0, initialHeight, tabContentMargin),
 		Configs:       configs.New(requestor, tabContentMargin),
 		Accounts:      accounts.New(styles, requestor, initialHeight, tabContentMargin, addresses),
-		Help:          help.New(),
-		Footer:        footer.New(styles),
 		About:         about.New(tabContentMargin, about.GetHelpContent()),
 		Utilities:     about.New(tabContentMargin, about.GetUtilsContent()),
 		requestor:     requestor,

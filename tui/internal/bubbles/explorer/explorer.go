@@ -197,7 +197,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = paysetState
 			}
 		}
-		return m, nil
 
 	case tea.WindowSizeMsg:
 		m.setSize(msg.Width, msg.Height)

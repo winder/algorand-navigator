@@ -27,8 +27,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, constants.Keys.Quit):
-			return m, tea.Quit
 		case key.Matches(msg, constants.Keys.Catchup):
 			return m, m.requestor.StartFastCatchup(networkFromID(m.network.GenesisID))
 		case key.Matches(msg, constants.Keys.AbortCatchup):
@@ -64,9 +62,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	m.Configs, cmd = m.Configs.Update(msg)
-	cmds = append(cmds, cmd)
-
-	m.Footer, cmd = m.Footer.Update(msg)
 	cmds = append(cmds, cmd)
 
 	m.Tabs, cmd = m.Tabs.Update(msg)

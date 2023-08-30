@@ -24,6 +24,11 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{k.ShortHelp()}
 }
 
+func (k KeyMap) SetRunnable(runnable bool) {
+	k.Catchup.SetEnabled(runnable)
+	k.AbortCatchup.SetEnabled(runnable)
+}
+
 // Keys is a global for accessing the KeyMap.
 var Keys = KeyMap{
 	// Not sure how to group help together.

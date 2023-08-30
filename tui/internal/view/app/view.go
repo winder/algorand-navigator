@@ -3,8 +3,6 @@ package app
 import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/indent"
-
-	"github.com/algorand/node-ui/tui/internal/constants"
 )
 
 // TODO: this function could implement a type and be passed to the tab view.
@@ -52,7 +50,5 @@ func (m Model) View() string {
 			m.Status.View(),
 			art()),
 		m.Tabs.View(),
-		m.tabView(),
-		m.Help.View(constants.Keys),
-		m.Footer.View())
+		m.tabView())
 }
