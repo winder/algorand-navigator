@@ -34,15 +34,27 @@ import (
 
 // Requestor provides an opaque pointer for an algod client.
 type Requestor struct {
-	Client  *algod.Client
-	dataDir string
+	Client     *algod.Client
+	url        string
+	adminToken string
+	token      string
+	dataDir    string
 }
 
 // MakeRequestor builds the requestor object.
-func MakeRequestor(client *algod.Client, dataDir string) *Requestor {
+func MakeRequestor(url, token, adminToken, dataDir string) *Requestor {
+	client, err := algod.MakeClient(url, token)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Problem creating client connection: %s\n", err.Error())
+		os.Exit(1)
+	}
+
 	return &Requestor{
-		Client:  client,
-		dataDir: dataDir,
+		url:        url,
+		token:      token,
+		adminToken: adminToken,
+		Client:     client,
+		dataDir:    dataDir,
 	}
 }
 
@@ -61,6 +73,18 @@ func formatVersion(ver models.Version) string {
 		ver.Build.Major,
 		ver.Build.BuildNumber,
 		ver.Build.CommitHash)
+}
+
+// GetConfigs returns the node config.json file if possible.
+func (r Requestor) GetConfigs() string {
+	if r.dataDir == "" {
+		return "data directory not set"
+	}
+	configs, err := os.ReadFile(path.Join(r.dataDir, "config.json"))
+	if err != nil {
+		return "config.json file not found"
+	}
+	return string(configs)
 }
 
 // GetNetworkCmd provides a tea.Cmd for fetching a NetworkMsg.
@@ -141,7 +165,10 @@ func (r Requestor) GetAccountStatusCmd(accounts []types.Address) tea.Cmd {
 	}
 }
 
-func doFastCatchupRequest(verb, network string) error {
+func doFastCatchupRequest(rootURL, adminToken, verb, network string) error {
+	if adminToken == "" {
+		return fmt.Errorf("cannot use fast catchup without an admin token")
+	}
 	resp, err := http.Get(fmt.Sprintf("https://algorand-catchpoints.s3.us-east-2.amazonaws.com/channel/%s/latest.catchpoint", network))
 	if err != nil {
 		panic(err)
@@ -153,9 +180,8 @@ func doFastCatchupRequest(verb, network string) error {
 	catchpoint := strings.Replace(string(body), "#", "%23", 1)
 
 	//start fast catchup
-	url := fmt.Sprintf("http://localhost:8080/v2/catchup/%s", catchpoint)
+	url := fmt.Sprintf("%s/v2/catchup/%s", rootURL, catchpoint)
 	url = url[:len(url)-1] // remove \n
-	apiToken, err := os.ReadFile(path.Join(os.Getenv("ALGORAND_DATA"), "algod.admin.token"))
 	if err != nil {
 		panic(err)
 	}
@@ -163,7 +189,7 @@ func doFastCatchupRequest(verb, network string) error {
 	if err != nil {
 		panic(err)
 	}
-	req.Header.Set("X-Algo-Api-Token", string(apiToken))
+	req.Header.Set("X-Algo-Api-Token", string(adminToken))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -177,9 +203,9 @@ func doFastCatchupRequest(verb, network string) error {
 }
 
 // StartFastCatchup attempts to start fast catchup for a given network.
-func StartFastCatchup(network string) tea.Cmd {
+func (r Requestor) StartFastCatchup(network string) tea.Cmd {
 	return func() tea.Msg {
-		err := doFastCatchupRequest(http.MethodPost, network)
+		err := doFastCatchupRequest(r.url, r.adminToken, http.MethodPost, network)
 		if err != nil {
 			panic(err)
 		}
@@ -188,22 +214,12 @@ func StartFastCatchup(network string) tea.Cmd {
 }
 
 // StopFastCatchup attempts to stop fast catchup for a given network.
-func StopFastCatchup(network string) tea.Cmd {
+func (r Requestor) StopFastCatchup(network string) tea.Cmd {
 	return func() tea.Msg {
-		err := doFastCatchupRequest(http.MethodDelete, network)
+		err := doFastCatchupRequest(r.url, r.adminToken, http.MethodDelete, network)
 		if err != nil {
 			panic(err)
 		}
 		return nil
 	}
-}
-
-// GetConfigs returns the node config.json file if possible.
-func GetConfigs() string {
-	// TODO: Optional
-	configs, err := os.ReadFile(path.Join(os.Getenv("ALGORAND_DATA"), "config.json"))
-	if err != nil {
-		return "config.json file not found"
-	}
-	return string(configs)
 }
