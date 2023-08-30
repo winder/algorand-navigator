@@ -15,7 +15,7 @@ func networkFromID(genesisID string) string {
 }
 
 // Update is part of the tea.Model interface.
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
