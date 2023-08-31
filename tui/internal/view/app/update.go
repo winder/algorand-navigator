@@ -27,6 +27,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch {
+		case key.Matches(msg, util.AppKeys.Quit):
+			return m, tea.Quit
 		case key.Matches(msg, util.AppKeys.Catchup):
 			return m, m.requestor.StartFastCatchup(networkFromID(m.network.GenesisID))
 		case key.Matches(msg, util.AppKeys.AbortCatchup):
