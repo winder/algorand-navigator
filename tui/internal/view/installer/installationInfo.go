@@ -5,34 +5,27 @@ func GetInstallationContent() string {
 # Algorand Node UI Installer :smiley_cat:
 
 You are about to install an Algorand Node. Congratulations!
-If this is a mistake, and you already have a node installed,
-you can exit this installer and run the UI with the -d flag.
+If this is a mistake, and you already have a node you'd like
+to connect to please exit and run the UI again using the -d
+or -u/-t options.
 
 When you are ready press **i** to start the installation wizard.
 This will guide you through the installation process.
 
 # What to expect
-After running the wizard a node will be installed and started
-and the node UI will transition to the main screen.
+The wizard will ask you to select a network to install. You can
+install multiple networks, but you will need to run the wizard
+for each network you want to install.
 
-Two directories will be created:
-* nodeui_algod_data
-* nodeui_algod_bin
+If a network already exists, the wizard will check for an update
+and then start or restart the node.
 
-The data directory will contain the node data and configuration
-while the bin directory will contain goal, algod, and other
-binaries associated with the node.
+Once the node is running the UI will automatically connect to it.
 
 # Node management
-If you need to manage the node directly for any reason, you can
-use the goal command. For example, to stop the node you can run:
-` + "```sh" + `
-nodeui_algod_bin/goal node stop -d nodeui_algod_data
-` + "```" + `
-
-To start it again you can run:
-` + "```sh" + `
-nodeui_algod_bin/goal node start -d nodeui_algod_data
-` + "```" + `
+The node will not be shutdown when you exit the UI. You can
+manage the node using the goal command line tool. It will be
+located in your user config directory. More information about
+this is provided at the end of the installation.
 `
 }

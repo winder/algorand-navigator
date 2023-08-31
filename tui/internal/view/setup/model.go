@@ -1,6 +1,9 @@
 package setup
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -15,6 +18,8 @@ import (
 
 type Model struct {
 	runnable  bool
+	configDir string
+
 	args      args.Arguments
 	installer installer.Model
 	app       app.Model
@@ -55,6 +60,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
+	case util.NodeUIConfigDir:
+		if msg.Err != nil {
+			fmt.Fprintf(os.Stderr, "Problem fetching config dir: %v\n", msg.Err)
+			return m, tea.Quit
+		}
+		m.configDir = msg.Dir
 	case installer.DataDirReady:
 		requestor, err := getRequestor(msg.DataDir, "", "", "")
 		if err == nil {

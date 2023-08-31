@@ -34,6 +34,8 @@ type WizardModel struct {
 
 	network   int
 	configDir string
+	binDir    string
+	dataDir   string
 	progress  string
 }
 
@@ -96,14 +98,14 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 			m.question--
 		case key.Matches(msg, util.InstallerKeys.Yes):
 			m.question++
-			cmds = append(cmds, installAndStartNode(m.configDir, m.list.SelectedItem().FilterValue()))
-
+			m.binDir, m.dataDir, cmd = installAndStartNodeReturnDirs(m.configDir, m.list.SelectedItem().FilterValue())
+			cmds = append(cmds, cmd)
 		case key.Matches(msg, util.InstallerKeys.No):
 			return m, tea.Quit
 		}
 	case installProgress:
 		if msg.err != nil {
-			fmt.Println(msg.err)
+			fmt.Fprintf(os.Stderr, "A problem occurred during installation: %s\n", msg.err)
 			return m, tea.Quit
 		}
 		m.progress = msg.msg
@@ -118,8 +120,9 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 	m.list, cmd = m.list.Update(msg)
 	cmds = append(cmds, cmd)
 
-	util.InstallerKeys.Yes.SetEnabled(m.question == 2)
-	util.InstallerKeys.No.SetEnabled(m.question == 2)
+	util.InstallerKeys.Forward.SetEnabled(m.question == 1)
+	util.InstallerKeys.Yes.SetEnabled(m.question == 1)
+	util.InstallerKeys.No.SetEnabled(m.question == 1)
 
 	return m, tea.Batch(cmds...)
 }
@@ -129,10 +132,14 @@ func (m WizardModel) View() string {
 	case 0:
 		return m.list.View()
 	case 1:
-		return istyle.Render(fmt.Sprintf("Do you want to install?\n\ndata directory: %s/algod_data\nbin directory: %s/algod_bin\n\nNetwork: %s\n\n Press [y]es or [n]o.",
-			m.configDir, m.configDir, m.list.SelectedItem().FilterValue()))
+		return istyle.Render(fmt.Sprintf("Do you want to install to the Node UI config directory?\nIf a data directory already exists we'll check for an update and then start it.\n\nConfig dir: %s\nNetwork: %s\n\n Press [y]es or [n]o.",
+			m.configDir, m.list.SelectedItem().FilterValue()))
 	default:
-		return istyle.Render("installing!", "\n\n", "Progress: ", m.progress)
+		return istyle.Render("installing!", "\n\n",
+			"The node is not stopped after Node UI is closed\n",
+			"To stop it yourself use the following command:\n",
+			fmt.Sprintf("    %s/goal node stop -d %s\n\n", m.binDir, m.dataDir),
+			"Progress: ", m.progress)
 	}
 }
 
@@ -143,29 +150,29 @@ type installProgress struct {
 	datadir string
 }
 
-func installAndStartNode(rootDir, network string) tea.Cmd {
-	data := path.Join(rootDir, "algod_data")
-	bin := path.Join(rootDir, "algod_bin")
-	err := os.Mkdir(data, 0755)
+func installAndStartNodeReturnDirs(rootDir, network string) (string, string, tea.Cmd) {
+	data := path.Join(rootDir, network, "algod_data")
+	bin := path.Join(rootDir, network, "algod_bin")
+	err := os.MkdirAll(data, 0755)
 	if err != nil {
-		return func() tea.Msg {
+		return "", "", func() tea.Msg {
 			return installProgress{msg: "failed to create data dir", err: err}
 		}
 	}
-	err = os.Mkdir(bin, 0755)
+	err = os.MkdirAll(bin, 0755)
 	if err != nil {
-		return func() tea.Msg {
+		return "", "", func() tea.Msg {
 			return installProgress{msg: "failed to create bin dir", err: err}
 		}
 	}
 	err = os.WriteFile(path.Join(bin, "update.sh"), []byte(updateScript), 0755)
 	if err != nil {
-		return func() tea.Msg {
+		return "", "", func() tea.Msg {
 			return installProgress{msg: "failed to write update.sh", err: err}
 		}
 	}
 
-	return tea.Batch(
+	return bin, data, tea.Batch(
 		func() tea.Msg {
 			return installProgress{msg: "Running update.sh", err: nil}
 		},
