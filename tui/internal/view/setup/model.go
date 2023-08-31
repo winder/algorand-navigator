@@ -7,9 +7,8 @@ import (
 
 	"github.com/algorand/node-ui/tui/args"
 	"github.com/algorand/node-ui/tui/internal/bubbles/footer"
-	"github.com/algorand/node-ui/tui/internal/constants"
 	"github.com/algorand/node-ui/tui/internal/style"
-	"github.com/algorand/node-ui/tui/internal/view"
+	"github.com/algorand/node-ui/tui/internal/util"
 	"github.com/algorand/node-ui/tui/internal/view/app"
 	"github.com/algorand/node-ui/tui/internal/view/installer"
 )
@@ -26,27 +25,28 @@ func New(args args.Arguments) (m Model) {
 	requestor, err := getRequestor(args.AlgodDataDir, args.AlgodURL, args.AlgodToken, args.AlgodAdminToken)
 	if err == nil {
 		addresses := getAddressesOrExit(args.AddressWatchList)
-		m.app = app.New(constants.InitialWidth, constants.InitialHeight, requestor, addresses)
+		m.app = app.New(util.InitialWidth, util.InitialHeight, requestor, addresses)
 		m.runnable = true
 	}
-	m.installer = installer.New(constants.InitialHeight, constants.InitialWidth, style.FooterHeight)
+	m.installer = installer.New(util.InitialHeight, util.InitialWidth, style.FooterHeight)
 	m.Footer = footer.New(style.DefaultStyles())
 	return m
 }
 
 func (m Model) Init() tea.Cmd {
-
-	if m.runnable {
-		return tea.Batch(
-			tea.EnterAltScreen,
-			m.app.Init(),
-		)
+	cmds := []tea.Cmd{
+		tea.EnterAltScreen,
+		util.MakeConfigCmd,
 	}
 
-	// else.... installer
+	if m.runnable {
+		cmds = append(cmds, m.app.Init())
+	} else {
+		cmds = append(cmds, m.installer.Init())
+	}
+
 	return tea.Batch(
-		tea.EnterAltScreen,
-		m.installer.Init(),
+		cmds...,
 	)
 }
 
@@ -59,15 +59,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		requestor, err := getRequestor(msg.DataDir, "", "", "")
 		if err == nil {
 			addresses := getAddressesOrExit(m.args.AddressWatchList)
-			m.app = app.New(constants.InitialWidth, constants.InitialHeight, requestor, addresses)
+			m.app = app.New(util.InitialWidth, util.InitialHeight, requestor, addresses)
 			m.runnable = true
 			return m, m.app.Init()
 		}
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, view.AppKeys.Quit):
+		case key.Matches(msg, util.AppKeys.Quit):
 			fallthrough
-		case key.Matches(msg, view.InstallerKeys.Quit):
+		case key.Matches(msg, util.InstallerKeys.Quit):
 			return m, tea.Quit
 		}
 	}

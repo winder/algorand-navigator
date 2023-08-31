@@ -1,13 +1,13 @@
 package installer
 
 import (
-	"github.com/algorand/node-ui/tui/internal/bubbles/about"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/algorand/node-ui/tui/internal/view"
+	"github.com/algorand/node-ui/tui/internal/bubbles/about"
+	"github.com/algorand/node-ui/tui/internal/util"
 )
 
 type phase int
@@ -52,10 +52,10 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		istyle.Width(msg.Width)
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, view.InstallerKeys.Install):
+		case key.Matches(msg, util.InstallerKeys.Install):
 			if m.active == intro {
 				m.active = install
-				view.InstallerKeys.Install.SetEnabled(false)
+				util.InstallerKeys.Install.SetEnabled(false)
 			}
 		}
 
@@ -83,5 +83,5 @@ func (m Model) View() string {
 	}
 	return lipgloss.JoinVertical(0,
 		content,
-		m.help.View(view.InstallerKeys))
+		m.help.View(util.InstallerKeys))
 }

@@ -3,16 +3,16 @@ package installer
 import (
 	_ "embed"
 	"fmt"
-	"github.com/charmbracelet/bubbles/filepicker"
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"os"
 	"os/exec"
 	"path"
 
-	"github.com/algorand/node-ui/tui/internal/view"
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+
+	"github.com/algorand/node-ui/tui/internal/util"
 )
 
 type DataDirReady struct {
@@ -27,16 +27,14 @@ var enter = key.NewBinding(
 	key.WithHelp("enter", "select"))
 
 type WizardModel struct {
-	margines int
+	heightMargin int
 
-	question   int
-	list       list.Model
-	filepicker filepicker.Model
+	question int
+	list     list.Model
 
-	// answers
-	network    int
-	installDir string
-	progress   string
+	network   int
+	configDir string
+	progress  string
 }
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -49,7 +47,8 @@ func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
-func NewWizardModel(h, w, heightMargine int) WizardModel {
+func NewWizardModel(h, w, heightMargin int) WizardModel {
+	os.UserHomeDir()
 	networks := []list.Item{
 		item{title: "mainnet", desc: "Top banana."},
 		item{title: "testnet", desc: "Assessment arena."},
@@ -64,46 +63,42 @@ func NewWizardModel(h, w, heightMargine int) WizardModel {
 	l.SetShowHelp(false)
 	l.DisableQuitKeybindings()
 
-	fp := filepicker.New()
-	fp.DirAllowed = true
-	fp.FileAllowed = false
-	fp.CurrentDirectory, _ = os.UserHomeDir()
-	fp.Height = h - heightMargine
 	return WizardModel{
-		margines:   heightMargine,
-		list:       l,
-		filepicker: fp,
+		heightMargin: heightMargin,
+		list:         l,
 	}
 }
 
 func (m WizardModel) Init() tea.Cmd {
-	return m.filepicker.Init()
+	return nil
 }
 
 func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 
-	startQuestion := m.question
 	switch msg := msg.(type) {
+	case util.NodeUIConfigDir:
+		if msg.Err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to get config: %s\n", msg.Err)
+			return m, tea.Quit
+		}
+		m.configDir = msg.Dir
+
 	case tea.WindowSizeMsg:
 		h, v := docStyle.GetFrameSize()
-		m.list.SetSize(msg.Width-h, msg.Height-v-m.margines)
-		m.filepicker.Height = msg.Height - v - m.margines
+		m.list.SetSize(msg.Width-h, msg.Height-v-m.heightMargin)
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, enter):
 			m.question++
-		case key.Matches(msg, view.InstallerKeys.Back):
+		case key.Matches(msg, util.InstallerKeys.Back):
 			m.question--
-			if m.question == 1 {
-				m.installDir = ""
-			}
-		case key.Matches(msg, view.InstallerKeys.Yes):
+		case key.Matches(msg, util.InstallerKeys.Yes):
 			m.question++
-			cmds = append(cmds, installAndStartNode(m.installDir, m.list.SelectedItem().FilterValue()))
+			cmds = append(cmds, installAndStartNode(m.configDir, m.list.SelectedItem().FilterValue()))
 
-		case key.Matches(msg, view.InstallerKeys.No):
+		case key.Matches(msg, util.InstallerKeys.No):
 			return m, tea.Quit
 		}
 	case installProgress:
@@ -123,18 +118,8 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 	m.list, cmd = m.list.Update(msg)
 	cmds = append(cmds, cmd)
 
-	// don't update the filepicker on transitions
-	if startQuestion == m.question || startQuestion == 1 {
-		m.filepicker, cmd = m.filepicker.Update(msg)
-		cmds = append(cmds, cmd)
-	}
-
-	if didSelect, path := m.filepicker.DidSelectFile(msg); didSelect {
-		m.installDir = path
-	}
-
-	view.InstallerKeys.Yes.SetEnabled(m.question == 2)
-	view.InstallerKeys.No.SetEnabled(m.question == 2)
+	util.InstallerKeys.Yes.SetEnabled(m.question == 2)
+	util.InstallerKeys.No.SetEnabled(m.question == 2)
 
 	return m, tea.Batch(cmds...)
 }
@@ -144,10 +129,8 @@ func (m WizardModel) View() string {
 	case 0:
 		return m.list.View()
 	case 1:
-		return m.filepicker.View()
-	case 2:
-		return istyle.Render(fmt.Sprintf("Do you want to install?\n\ndata directory: %s/nodeui_algod_data\nbin directory: %s/nodeui_algod_bin\n\nNetwork: %s\n\n Press [y]es or [n]o.",
-			m.installDir, m.installDir, m.list.SelectedItem().FilterValue()))
+		return istyle.Render(fmt.Sprintf("Do you want to install?\n\ndata directory: %s/algod_data\nbin directory: %s/algod_bin\n\nNetwork: %s\n\n Press [y]es or [n]o.",
+			m.configDir, m.configDir, m.list.SelectedItem().FilterValue()))
 	default:
 		return istyle.Render("installing!", "\n\n", "Progress: ", m.progress)
 	}
@@ -161,8 +144,8 @@ type installProgress struct {
 }
 
 func installAndStartNode(rootDir, network string) tea.Cmd {
-	data := path.Join(rootDir, "nodeui_algod_data")
-	bin := path.Join(rootDir, "nodeui_algod_bin")
+	data := path.Join(rootDir, "algod_data")
+	bin := path.Join(rootDir, "algod_bin")
 	err := os.Mkdir(data, 0755)
 	if err != nil {
 		return func() tea.Msg {

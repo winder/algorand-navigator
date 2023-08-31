@@ -17,7 +17,7 @@ import (
 
 	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui/internal/style"
-	"github.com/algorand/node-ui/tui/internal/view"
+	"github.com/algorand/node-ui/tui/internal/util"
 )
 
 type state int
@@ -165,7 +165,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		// navigate into explorer views
 		switch {
-		case key.Matches(msg, view.AppKeys.Forward):
+		case key.Matches(msg, util.AppKeys.Forward):
 			switch m.state {
 			case blockState:
 				// Select transactions.
@@ -188,7 +188,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		// navigate out of explorer views
-		case key.Matches(msg, view.AppKeys.Back):
+		case key.Matches(msg, util.AppKeys.Back):
 			switch m.state {
 			case paysetState:
 				m.state = blockState

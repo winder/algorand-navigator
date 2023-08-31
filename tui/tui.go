@@ -17,7 +17,7 @@ import (
 	lm "github.com/charmbracelet/wish/logging"
 
 	"github.com/algorand/node-ui/tui/args"
-	"github.com/algorand/node-ui/tui/internal/constants"
+	"github.com/algorand/node-ui/tui/internal/util"
 	"github.com/algorand/node-ui/tui/internal/view/setup"
 )
 
@@ -50,7 +50,7 @@ func Start(args args.Arguments) {
 	}
 
 	sshServer, err := wish.NewServer(
-		wish.WithAddress(fmt.Sprintf("%s:%d", constants.Host, args.TuiPort)),
+		wish.WithAddress(fmt.Sprintf("%s:%d", util.Host, args.TuiPort)),
 		wish.WithHostKeyPath(path.Join(dirname, ".ssh/term_info_ed25519")),
 		wish.WithMiddleware(
 			bm.Middleware(getTeaHandler(model)),
@@ -63,7 +63,7 @@ func Start(args args.Arguments) {
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	log.Printf("Starting SSH server on %s:%d", constants.Host, args.TuiPort)
+	log.Printf("Starting SSH server on %s:%d", util.Host, args.TuiPort)
 	go func() {
 		if err = sshServer.ListenAndServe(); err != nil {
 			log.Fatalln(err)

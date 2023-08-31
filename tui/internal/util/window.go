@@ -1,4 +1,4 @@
-package constants
+package util
 
 const (
 	InitialWidth  = 80

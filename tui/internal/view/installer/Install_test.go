@@ -2,11 +2,12 @@ package installer
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"os"
 	"os/exec"
 	"path"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestInstallTest(t *testing.T) {
@@ -21,8 +22,7 @@ func TestInstallTest(t *testing.T) {
 	err = os.WriteFile(path.Join(bin, "update.sh"), []byte(updateScript), 0755)
 	require.NoError(t, err)
 
-	command := fmt.Sprintf(`%s/update.sh -i -c "%s" -p "%s" -d "%s" -i -g "%s"`, t.TempDir(), "stable", bin, data, "stable")
-	c := exec.Command(command)
+	c := exec.Command(fmt.Sprintf("%s/update.sh", bin), "-i", "-c", "stable", "-p", bin, "-d", data, "-i", "-g", "mainnet")
 	out, err := c.CombinedOutput()
 	fmt.Println(out)
 	require.NoError(t, err)
