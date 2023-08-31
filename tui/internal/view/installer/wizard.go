@@ -29,10 +29,6 @@ type DataDirReady struct {
 	DataDir string
 }
 
-var enter = key.NewBinding(
-	key.WithKeys("enter"),
-	key.WithHelp("enter", "select"))
-
 type WizardModel struct {
 	heightMargin int
 
@@ -109,7 +105,7 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 		m.installYesNoContent = renderYesNoContent(m.list.w, m.list.h, m.configDir, m.list.Selected())
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, enter):
+		case key.Matches(msg, util.InstallerKeys.Forward):
 			m.question++
 		case key.Matches(msg, util.InstallerKeys.Back):
 			if m.question > 0 {
@@ -139,7 +135,8 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 	m.list, cmd = m.list.Update(msg)
 	cmds = append(cmds, cmd)
 
-	util.InstallerKeys.Forward.SetEnabled(m.question != installQuestion)
+	util.InstallerKeys.Back.SetEnabled(m.question > 0 && m.question < installing)
+	util.InstallerKeys.Forward.SetEnabled(m.question < installQuestion)
 	util.InstallerKeys.Yes.SetEnabled(m.question == installQuestion)
 	util.InstallerKeys.No.SetEnabled(m.question == installQuestion)
 	util.InstallerKeys.CursorUp.SetEnabled(m.question == networkQuestion)
