@@ -32,7 +32,6 @@ type networkItem struct {
 }
 
 func NewNetworkPicker(width, height, verticalMargin int, items ...networkItem) networkPicker {
-
 	n := networkPicker{
 		networks:       items,
 		w:              width,
@@ -123,5 +122,6 @@ func (n networkPicker) View() string {
 		}
 		bldr.WriteString("\n")
 	}
+
 	return n.printer.Render(lipgloss.JoinVertical(0, n.header, n.listPad.Render(bldr.String())))
 }

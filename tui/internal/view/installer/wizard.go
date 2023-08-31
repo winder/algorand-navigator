@@ -62,14 +62,6 @@ func NewWizardModel(h, w, heightMargin int) WizardModel {
 	}
 
 	l := NewNetworkPicker(w, h, heightMargin, networks...)
-	/*
-		l.Title = "Network"
-		l.AdditionalShortHelpKeys = func() []key.Binding {
-			return []key.Binding{enter}
-		}
-		l.SetShowHelp(false)
-		l.DisableQuitKeybindings()
-	*/
 
 	return WizardModel{
 		heightMargin: heightMargin,

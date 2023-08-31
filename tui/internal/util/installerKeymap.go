@@ -18,7 +18,7 @@ type InstallerKeyMap struct {
 
 // ShortHelp implements the InstallerKeyMap interface.
 func (k *InstallerKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Install, k.Yes, k.No, k.Generic, k.Quit, k.Help}
+	return []key.Binding{k.Install, k.Yes, k.No, k.CursorUp, k.CursorDown, k.Forward, k.Generic, k.Quit, k.Help}
 }
 
 // FullHelp implements the InstallerKeyMap interface.
@@ -57,7 +57,7 @@ var InstallerKeys = &InstallerKeyMap{
 		key.WithHelp("q", "quit")),
 	Forward: key.NewBinding(
 		key.WithKeys("enter", "→"),
-		key.WithHelp("enter", "forwards")),
+		key.WithHelp("enter", "select")),
 	Back: key.NewBinding(
 		key.WithKeys("esc", "←"),
 		key.WithHelp("esc", "backwards")),
