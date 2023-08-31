@@ -1,13 +1,15 @@
 package installer
 
 import (
-	"github.com/algorand/node-ui/tui/internal/style"
-	"github.com/algorand/node-ui/tui/internal/util"
+	"strings"
+
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
-	"strings"
+
+	"github.com/algorand/node-ui/tui/internal/style"
+	"github.com/algorand/node-ui/tui/internal/util"
 )
 
 var defaultstyle = style.DefaultStyles()
@@ -31,6 +33,20 @@ type networkItem struct {
 	present     bool
 }
 
+func networkPickerHeader(width int) string {
+	r, _ := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(width),
+		glamour.WithEmoji(),
+	)
+	padder := lipgloss.NewStyle().PaddingLeft(7).PaddingTop(1)
+	header, _ := r.Render(`
+# Network Selector
+Choose one of the long running networks to install.
+`)
+	return padder.Render(header)
+}
+
 func NewNetworkPicker(width, height, verticalMargin int, items ...networkItem) networkPicker {
 	n := networkPicker{
 		networks:       items,
@@ -52,17 +68,7 @@ func NewNetworkPicker(width, height, verticalMargin int, items ...networkItem) n
 	n.nonSelectedLine = lipgloss.NewStyle().Foreground(lipgloss.Color("240")).PaddingLeft(2)
 	n.listPad = lipgloss.NewStyle().PaddingLeft(9)
 
-	r, _ := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(width),
-		glamour.WithEmoji(),
-	)
-	padder := lipgloss.NewStyle().PaddingLeft(7).PaddingTop(1)
-	n.header, _ = r.Render(`
-# Network Selector
-Choose one of the long running networks to install.
-`)
-	n.header = padder.Render(n.header)
+	n.header = networkPickerHeader(width)
 
 	return n
 }
@@ -79,8 +85,8 @@ func (n networkPicker) Update(msg tea.Msg) (networkPicker, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		n.w = msg.Width
-		n.h = msg.Height
-		n.printer.Height(n.h - n.verticalMargin)
+		n.h = msg.Height - n.verticalMargin
+		n.printer.Height(n.h)
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, util.InstallerKeys.CursorUp):

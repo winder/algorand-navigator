@@ -24,6 +24,8 @@ type Model struct {
 	installer installer.Model
 	app       app.Model
 	Footer    tea.Model
+
+	sizeMsg tea.WindowSizeMsg
 }
 
 func New(args args.Arguments) (m Model) {
@@ -67,6 +69,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.sizeMsg = msg
 	case util.NodeUIConfigDir:
 		if msg.Err != nil {
 			fmt.Fprintf(os.Stderr, "Problem fetching config dir: %v\n", msg.Err)
@@ -77,7 +81,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		requestor, err := getRequestor(msg.DataDir, "", "", "")
 		if err == nil {
 			addresses := getAddressesOrExit(m.args.AddressWatchList)
-			m.app = app.New(util.InitialWidth, util.InitialHeight, requestor, addresses)
+			m.app = app.New(m.sizeMsg.Width, m.sizeMsg.Height, requestor, addresses)
 			m.runnable = true
 			return m, m.app.Init()
 		}
@@ -95,11 +99,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.Footer, cmd = m.Footer.Update(msg)
 	cmds = append(cmds, cmd)
-
-	if m.runnable {
-		m.app, cmd = m.app.Update(msg)
-		cmds = append(cmds, cmd)
-	}
 
 	return m, tea.Batch(cmds...)
 }

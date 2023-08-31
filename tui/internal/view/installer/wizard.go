@@ -9,10 +9,14 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/algorand/node-ui/tui/internal/util"
 )
+
+//go:embed update.sh
+var updateScript string
 
 const (
 	networkQuestion = iota
@@ -20,12 +24,10 @@ const (
 	installing
 )
 
+// DataDirReady is sent when once the node has been installed and started.
 type DataDirReady struct {
 	DataDir string
 }
-
-//go:embed update.sh
-var updateScript string
 
 var enter = key.NewBinding(
 	key.WithKeys("enter"),
@@ -37,22 +39,14 @@ type WizardModel struct {
 	question int
 	list     networkPicker
 
+	installYesNoContent string
+
 	network   int
 	configDir string
 	binDir    string
 	dataDir   string
 	progress  string
 }
-
-var docStyle = lipgloss.NewStyle().Margin(1, 2)
-
-type item struct {
-	title, desc string
-}
-
-func (i item) Title() string       { return i.title }
-func (i item) Description() string { return i.desc }
-func (i item) FilterValue() string { return i.title }
 
 func NewWizardModel(h, w, heightMargin int) WizardModel {
 	networks := []networkItem{
@@ -67,6 +61,25 @@ func NewWizardModel(h, w, heightMargin int) WizardModel {
 		heightMargin: heightMargin,
 		list:         l,
 	}
+}
+
+func renderYesNoContent(width, height int, configDir string, network string) string {
+	r, _ := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(width),
+		glamour.WithEmoji(),
+	)
+	padder := lipgloss.NewStyle().Height(height).PaddingLeft(7).PaddingTop(1)
+	header, _ := r.Render(`
+# Do you want to install a ` + network + ` node?
+Press [y]es or [n]o to start the node installation.
+
+If a node has been previously installed a software update will be attempted before it is started or restarted.
+
+### NodeUI directory:` + configDir + `
+### Network:` + network + `
+`)
+	return padder.Render(header)
 }
 
 func (m WizardModel) Init() tea.Cmd {
@@ -84,16 +97,16 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 			return m, tea.Quit
 		}
 		m.configDir = msg.Dir
+		m.installYesNoContent = renderYesNoContent(m.list.w, m.list.h, m.configDir, m.list.Selected())
 		for i := range m.list.networks {
 			n := &m.list.networks[i]
 			_, err := os.Stat(path.Join(m.configDir, n.title))
 			n.present = err == nil
 		}
-
 	case tea.WindowSizeMsg:
-		w, h := docStyle.GetFrameSize()
-		m.list.w = msg.Width - w
-		m.list.h = msg.Height - h - m.heightMargin
+		m.list.w = msg.Width
+		m.list.h = msg.Height - m.heightMargin
+		m.installYesNoContent = renderYesNoContent(m.list.w, m.list.h, m.configDir, m.list.Selected())
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, enter):
@@ -140,8 +153,7 @@ func (m WizardModel) View() string {
 	case networkQuestion:
 		return m.list.View()
 	case installQuestion:
-		return istyle.Render(fmt.Sprintf("Do you want to install to the Node UI config directory?\nIf a data directory already exists we'll check for an update and then start it.\n\nConfig dir: %s\nNetwork: %s\n\n Press [y]es or [n]o.",
-			m.configDir, m.list.Selected()))
+		return m.installYesNoContent
 	case installing:
 		return istyle.Render("installing!", "\n\n",
 			"The node is not stopped after Node UI is closed\n",
