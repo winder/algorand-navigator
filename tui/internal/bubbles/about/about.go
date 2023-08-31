@@ -22,7 +22,7 @@ func New(heightMargin int, content string) Model {
 	m.setSize(80, 20)
 
 	r, _ := glamour.NewTermRenderer(
-		glamour.WithStandardStyle("dark"),
+		glamour.WithAutoStyle(),
 		glamour.WithWordWrap(80),
 		glamour.WithEmoji(),
 	)

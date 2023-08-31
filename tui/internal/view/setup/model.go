@@ -32,8 +32,9 @@ func New(args args.Arguments) (m Model) {
 		addresses := getAddressesOrExit(args.AddressWatchList)
 		m.app = app.New(util.InitialWidth, util.InitialHeight, requestor, addresses)
 		m.runnable = true
+	} else {
+		m.installer = installer.New(util.InitialHeight, util.InitialWidth, style.FooterHeight)
 	}
-	m.installer = installer.New(util.InitialHeight, util.InitialWidth, style.FooterHeight)
 	m.Footer = footer.New(style.DefaultStyles())
 	return m
 }
@@ -58,6 +59,12 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
+
+	// short circuit when things are runnable.
+	if m.runnable {
+		m.app, cmd = m.app.Update(msg)
+		return m, cmd
+	}
 
 	switch msg := msg.(type) {
 	case util.NodeUIConfigDir:

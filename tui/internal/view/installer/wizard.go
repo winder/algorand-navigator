@@ -8,11 +8,16 @@ import (
 	"path"
 
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/algorand/node-ui/tui/internal/util"
+)
+
+const (
+	networkQuestion = iota
+	installQuestion
+	installing
 )
 
 type DataDirReady struct {
@@ -30,7 +35,7 @@ type WizardModel struct {
 	heightMargin int
 
 	question int
-	list     list.Model
+	list     networkPicker
 
 	network   int
 	configDir string
@@ -50,20 +55,21 @@ func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
 func NewWizardModel(h, w, heightMargin int) WizardModel {
-	os.UserHomeDir()
-	networks := []list.Item{
-		item{title: "mainnet", desc: "Top banana."},
-		item{title: "testnet", desc: "Assessment arena."},
-		item{title: "betanet", desc: "Where bugs vacation."},
+	networks := []networkItem{
+		{title: "mainnet", desc: "Top banana."},
+		{title: "testnet", desc: "Assessment arena."},
+		{title: "betanet", desc: "Where bugs vacation."},
 	}
 
-	l := list.New(networks, list.NewDefaultDelegate(), w, h)
-	l.Title = "Network"
-	l.AdditionalShortHelpKeys = func() []key.Binding {
-		return []key.Binding{enter}
-	}
-	l.SetShowHelp(false)
-	l.DisableQuitKeybindings()
+	l := NewNetworkPicker(w, h, heightMargin, networks...)
+	/*
+		l.Title = "Network"
+		l.AdditionalShortHelpKeys = func() []key.Binding {
+			return []key.Binding{enter}
+		}
+		l.SetShowHelp(false)
+		l.DisableQuitKeybindings()
+	*/
 
 	return WizardModel{
 		heightMargin: heightMargin,
@@ -86,19 +92,27 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 			return m, tea.Quit
 		}
 		m.configDir = msg.Dir
+		for i := range m.list.networks {
+			n := &m.list.networks[i]
+			_, err := os.Stat(path.Join(m.configDir, n.title))
+			n.present = err == nil
+		}
 
 	case tea.WindowSizeMsg:
-		h, v := docStyle.GetFrameSize()
-		m.list.SetSize(msg.Width-h, msg.Height-v-m.heightMargin)
+		w, h := docStyle.GetFrameSize()
+		m.list.w = msg.Width - w
+		m.list.h = msg.Height - h - m.heightMargin
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, enter):
 			m.question++
 		case key.Matches(msg, util.InstallerKeys.Back):
-			m.question--
+			if m.question > 0 {
+				m.question--
+			}
 		case key.Matches(msg, util.InstallerKeys.Yes):
 			m.question++
-			m.binDir, m.dataDir, cmd = installAndStartNodeReturnDirs(m.configDir, m.list.SelectedItem().FilterValue())
+			m.binDir, m.dataDir, cmd = installAndStartNodeReturnDirs(m.configDir, m.list.Selected())
 			cmds = append(cmds, cmd)
 		case key.Matches(msg, util.InstallerKeys.No):
 			return m, tea.Quit
@@ -120,26 +134,30 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 	m.list, cmd = m.list.Update(msg)
 	cmds = append(cmds, cmd)
 
-	util.InstallerKeys.Forward.SetEnabled(m.question == 1)
-	util.InstallerKeys.Yes.SetEnabled(m.question == 1)
-	util.InstallerKeys.No.SetEnabled(m.question == 1)
+	util.InstallerKeys.Forward.SetEnabled(m.question != installQuestion)
+	util.InstallerKeys.Yes.SetEnabled(m.question == installQuestion)
+	util.InstallerKeys.No.SetEnabled(m.question == installQuestion)
+	util.InstallerKeys.CursorUp.SetEnabled(m.question == networkQuestion)
+	util.InstallerKeys.CursorDown.SetEnabled(m.question == networkQuestion)
 
 	return m, tea.Batch(cmds...)
 }
 
 func (m WizardModel) View() string {
 	switch m.question {
-	case 0:
+	case networkQuestion:
 		return m.list.View()
-	case 1:
+	case installQuestion:
 		return istyle.Render(fmt.Sprintf("Do you want to install to the Node UI config directory?\nIf a data directory already exists we'll check for an update and then start it.\n\nConfig dir: %s\nNetwork: %s\n\n Press [y]es or [n]o.",
-			m.configDir, m.list.SelectedItem().FilterValue()))
-	default:
+			m.configDir, m.list.Selected()))
+	case installing:
 		return istyle.Render("installing!", "\n\n",
 			"The node is not stopped after Node UI is closed\n",
 			"To stop it yourself use the following command:\n",
 			fmt.Sprintf("    %s/goal node stop -d %s\n\n", m.binDir, m.dataDir),
 			"Progress: ", m.progress)
+	default:
+		return "unknown state"
 	}
 }
 
