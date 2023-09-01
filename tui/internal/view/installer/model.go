@@ -33,7 +33,7 @@ func New(height, width, heightMargin int) Model {
 		active:           intro,
 		heightMargin:     heightMargin,
 		help:             help.New(),
-		installationInfo: about.New(heightMargin+1, GetInstallationContent()),
+		installationInfo: about.New(heightMargin+1, getInstallationContent()),
 		wizard:           NewWizardModel(height, width, heightMargin+1), // add 1 for the help
 	}
 }

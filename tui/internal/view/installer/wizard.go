@@ -4,13 +4,11 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/glamour"
-	"github.com/charmbracelet/lipgloss"
 
 	"github.com/algorand/node-ui/tui/internal/util"
 )
@@ -31,11 +29,15 @@ type DataDirReady struct {
 
 type WizardModel struct {
 	heightMargin int
+	width        int
+	height       int
 
 	question int
 	list     networkPicker
 
 	installYesNoContent string
+	installingContent   string
+	outputBuffer        string
 
 	network   int
 	configDir string
@@ -55,27 +57,10 @@ func NewWizardModel(h, w, heightMargin int) WizardModel {
 
 	return WizardModel{
 		heightMargin: heightMargin,
+		width:        w,
+		height:       h,
 		list:         l,
 	}
-}
-
-func renderYesNoContent(width, height int, configDir string, network string) string {
-	r, _ := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(width),
-		glamour.WithEmoji(),
-	)
-	padder := lipgloss.NewStyle().Height(height).PaddingLeft(7).PaddingTop(1)
-	header, _ := r.Render(`
-# Do you want to install a ` + network + ` node?
-Press [y]es or [n]o to start the node installation.
-
-If a node has been previously installed a software update will be attempted before it is started or restarted.
-
-### NodeUI directory:` + configDir + `
-### Network:` + network + `
-`)
-	return padder.Render(header)
 }
 
 func (m WizardModel) Init() tea.Cmd {
@@ -93,16 +78,16 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 			return m, tea.Quit
 		}
 		m.configDir = msg.Dir
-		m.installYesNoContent = renderYesNoContent(m.list.w, m.list.h, m.configDir, m.list.Selected())
+		m.installYesNoContent = renderYesNoContent(m.width, m.height, m.configDir, m.list.Selected())
 		for i := range m.list.networks {
 			n := &m.list.networks[i]
 			_, err := os.Stat(path.Join(m.configDir, n.title))
 			n.present = err == nil
 		}
 	case tea.WindowSizeMsg:
-		m.list.w = msg.Width
-		m.list.h = msg.Height - m.heightMargin
-		m.installYesNoContent = renderYesNoContent(m.list.w, m.list.h, m.configDir, m.list.Selected())
+		m.width = msg.Width
+		m.height = msg.Height - m.heightMargin
+		m.installYesNoContent = renderYesNoContent(m.width, m.height, m.configDir, m.list.Selected())
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, util.InstallerKeys.Forward):
@@ -123,12 +108,24 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 			fmt.Fprintf(os.Stderr, "A problem occurred during installation: %s\n", msg.err)
 			return m, tea.Quit
 		}
+
 		m.progress = msg.msg
+		m.outputBuffer = msg.output.String()
 		if msg.done {
 			return m, func() tea.Msg {
 				return DataDirReady{DataDir: msg.datadir}
 			}
 		}
+		m.installingContent = renderInstallingContent(m.width, m.height, m.binDir, m.dataDir, m.progress, m.outputBuffer)
+
+		return m, tea.Tick(50*time.Millisecond, func(t time.Time) tea.Msg {
+			// come back in a minute to append more output.
+			return installProgress{
+				msg:    msg.msg,
+				err:    msg.err,
+				output: msg.output,
+			}
+		})
 	}
 
 	// Need to update the submodules first to ensure the right file is "picked"
@@ -152,52 +149,8 @@ func (m WizardModel) View() string {
 	case installQuestion:
 		return m.installYesNoContent
 	case installing:
-		return istyle.Render("installing!", "\n\n",
-			"The node is not stopped after Node UI is closed\n",
-			"To stop it yourself use the following command:\n",
-			fmt.Sprintf("    %s/goal node stop -d %s\n\n", m.binDir, m.dataDir),
-			"Progress: ", m.progress)
+		return m.installingContent
 	default:
 		return "unknown state"
 	}
-}
-
-type installProgress struct {
-	msg     string
-	err     error
-	done    bool
-	datadir string
-}
-
-func installAndStartNodeReturnDirs(rootDir, network string) (string, string, tea.Cmd) {
-	data := path.Join(rootDir, network, "algod_data")
-	bin := path.Join(rootDir, network, "algod_bin")
-	err := os.MkdirAll(data, 0755)
-	if err != nil {
-		return "", "", func() tea.Msg {
-			return installProgress{msg: "failed to create data dir", err: err}
-		}
-	}
-	err = os.MkdirAll(bin, 0755)
-	if err != nil {
-		return "", "", func() tea.Msg {
-			return installProgress{msg: "failed to create bin dir", err: err}
-		}
-	}
-	err = os.WriteFile(path.Join(bin, "update.sh"), []byte(updateScript), 0755)
-	if err != nil {
-		return "", "", func() tea.Msg {
-			return installProgress{msg: "failed to write update.sh", err: err}
-		}
-	}
-
-	return bin, data, tea.Batch(
-		func() tea.Msg {
-			return installProgress{msg: "Running update.sh", err: nil}
-		},
-		func() tea.Msg {
-			c := exec.Command(fmt.Sprintf("%s/update.sh", bin), "-i", "-c", "stable", "-p", bin, "-d", data, "-i", "-g", network)
-			out, err := c.CombinedOutput()
-			return installProgress{msg: fmt.Sprintf("Finished running update.sh! \n%s\n" + string(out)), err: err, done: true, datadir: data}
-		})
 }
