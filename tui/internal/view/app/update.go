@@ -33,6 +33,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			return m, m.requestor.StartFastCatchup(networkFromID(m.network.GenesisID))
 		case key.Matches(msg, util.AppKeys.AbortCatchup):
 			return m, m.requestor.StopFastCatchup(networkFromID(m.network.GenesisID))
+		case key.Matches(msg, util.AppKeys.Shutdown):
+			// trigger shutdown from a different level.
+			return m, func() tea.Msg {
+				return messages.MakeStopNodeMsg(m.requestor)
+			}
 		case key.Matches(msg, util.AppKeys.Section):
 			m.active++
 			m.active %= 5

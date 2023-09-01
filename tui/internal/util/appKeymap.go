@@ -6,6 +6,7 @@ import "github.com/charmbracelet/bubbles/key"
 type AppKeyMap struct {
 	Generic      key.Binding
 	Quit         key.Binding
+	Shutdown     key.Binding
 	Catchup      key.Binding
 	AbortCatchup key.Binding
 	Section      key.Binding
@@ -16,7 +17,7 @@ type AppKeyMap struct {
 
 // ShortHelp implements the AppKeyMap interface.
 func (k *AppKeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Section, k.Forward, k.Back, k.Generic, k.Quit, k.Help}
+	return []key.Binding{k.Section, k.Forward, k.Back, k.Generic, k.Catchup, k.AbortCatchup, k.Shutdown, k.Quit, k.Help}
 }
 
 // FullHelp implements the AppKeyMap interface.
@@ -34,6 +35,9 @@ var AppKeys = &AppKeyMap{
 	Quit: key.NewBinding(
 		key.WithKeys("q", "ctrl+c"),
 		key.WithHelp("q", "quit")),
+	Shutdown: key.NewBinding(
+		key.WithKeys("s"),
+		key.WithHelp("s", "shutdown node")),
 	Catchup: key.NewBinding(
 		key.WithKeys("f"),
 		key.WithHelp("f", "start fast catchup")),

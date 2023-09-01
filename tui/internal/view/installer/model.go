@@ -56,6 +56,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	case tea.KeyMsg:
 		keyMsg = true
 		switch {
+		case key.Matches(msg, util.InstallerKeys.Quit):
+			return m, tea.Quit
 		case key.Matches(msg, util.InstallerKeys.Install):
 			if m.active == intro {
 				m.active = install

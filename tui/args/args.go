@@ -7,6 +7,7 @@ type Arguments struct {
 	AlgodToken       string
 	AlgodAdminToken  string
 	AlgodDataDir     string
+	AlgodBinDir      string
 	AddressWatchList []string
 	VersionFlag      bool
 }
