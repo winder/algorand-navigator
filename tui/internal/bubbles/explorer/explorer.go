@@ -3,6 +3,10 @@ package explorer
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"strings"
+	"time"
+
 	table "github.com/calyptia/go-bubble-table"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -31,7 +35,9 @@ type txnItems []transactionItem
 
 // Model for the block explorer bubble.
 type Model struct {
-	state state
+	errCnt uint64
+	err    error
+	state  state
 
 	width        int
 	widthMargin  int
@@ -41,6 +47,9 @@ type Model struct {
 
 	// for blocks page
 	blocks blocks
+
+	// listener for status command, used for recovery
+	statusRound uint64
 
 	// cache for transactions page
 	transactions txnItems
@@ -148,7 +157,7 @@ func (m *Model) setSize(width, height int) {
 	m.txnView.Height = height - m.heightMargin - lipgloss.Height(m.headerView()) - lipgloss.Height(m.footerView())
 }
 
-// aUpdate is part of the tea.Model interface.
+// Update is part of the tea.Model interface.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var updateCmd tea.Cmd
 	var cmds []tea.Cmd
@@ -188,16 +197,35 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state = paysetState
 			}
 		}
+		return m, nil
 
 	case tea.WindowSizeMsg:
 		m.setSize(msg.Width, msg.Height)
+		return m, nil
+
+	case messages.StatusMsg:
+		m.statusRound = msg.Status.LastRound
+		return m, nil
 
 	case BlocksMsg:
+		next := uint64(0)
+
+		// report the error and wait 1 second before the next attempt.
+		if msg.Err != nil {
+			next = m.statusRound
+			m.errCnt++
+			m.err = msg.Err
+
+			return m, tea.Tick(1*time.Second, func(time.Time) tea.Msg {
+				return m.nextBlockCmd(next)()
+			})
+		}
+		m.err = nil
+
 		// append Blocks
 		backup := m.blocks
 		m.blocks = msg.Blocks
 		m.blocks = append(m.blocks, backup...)
-		next := uint64(0)
 		if len(m.blocks) > 0 {
 			next = m.blocks[0].Round + 1
 		}
@@ -224,11 +252,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View is part of the tea.Model interface.
 func (m Model) View() string {
+	prefix := ""
+	if m.err != nil {
+		var bldr strings.Builder
+		bldr.WriteString("\n")
+		bldr.WriteString("\n")
+		bldr.WriteString(fmt.Sprintf("Error(%d): %s\n", m.errCnt, strings.ReplaceAll(m.err.Error(), "\n", "")))
+		for i := 0; i < (m.height - m.heightMargin - 3 - 1); i++ {
+			bldr.WriteString("\n")
+		}
+		return bldr.String()
+	}
 	switch m.state {
 	case blockState, paysetState:
-		return m.style.Bottom.Render(m.table.View())
+		return prefix + m.style.Bottom.Render(m.table.View())
 	case txnState:
-		return m.viewTransaction()
+		return prefix + m.viewTransaction()
 	}
 	return ""
 }

@@ -27,13 +27,15 @@ var (
 
 // Model representing the configs page.
 type Model struct {
+	requestor    *messages.Requestor
 	heightMargin int
 	viewport     viewport.Model
 }
 
 // New creates a Model.
-func New(heightMargin int) Model {
+func New(requestor *messages.Requestor, heightMargin int) Model {
 	m := Model{
+		requestor:    requestor,
 		viewport:     viewport.New(0, 0),
 		heightMargin: heightMargin,
 	}
@@ -46,7 +48,7 @@ type ConfigContent string
 
 func (m Model) getContent() tea.Cmd {
 	return func() tea.Msg {
-		return ConfigContent(messages.GetConfigs())
+		return ConfigContent(m.requestor.GetConfigs())
 	}
 }
 

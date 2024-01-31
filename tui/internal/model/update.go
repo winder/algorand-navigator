@@ -30,9 +30,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, constants.Keys.Quit):
 			return m, tea.Quit
 		case key.Matches(msg, constants.Keys.Catchup):
-			return m, messages.StartFastCatchup(networkFromID(m.network.GenesisID))
+			return m, m.requestor.StartFastCatchup(networkFromID(m.network.GenesisID))
 		case key.Matches(msg, constants.Keys.AbortCatchup):
-			return m, messages.StopFastCatchup(networkFromID(m.network.GenesisID))
+			return m, m.requestor.StopFastCatchup(networkFromID(m.network.GenesisID))
 		case key.Matches(msg, constants.Keys.Section):
 			m.active++
 			m.active %= 5
