@@ -1,4 +1,4 @@
-package model
+package app
 
 import (
 	"strings"
@@ -7,7 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/algorand/node-ui/messages"
-	"github.com/algorand/node-ui/tui/internal/constants"
+	"github.com/algorand/node-ui/tui/internal/util"
 )
 
 func networkFromID(genesisID string) string {
@@ -15,7 +15,7 @@ func networkFromID(genesisID string) string {
 }
 
 // Update is part of the tea.Model interface.
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -27,13 +27,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, constants.Keys.Quit):
+		case key.Matches(msg, util.AppKeys.Quit):
 			return m, tea.Quit
-		case key.Matches(msg, constants.Keys.Catchup):
+		case key.Matches(msg, util.AppKeys.Catchup):
 			return m, m.requestor.StartFastCatchup(networkFromID(m.network.GenesisID))
-		case key.Matches(msg, constants.Keys.AbortCatchup):
+		case key.Matches(msg, util.AppKeys.AbortCatchup):
 			return m, m.requestor.StopFastCatchup(networkFromID(m.network.GenesisID))
-		case key.Matches(msg, constants.Keys.Section):
+		case key.Matches(msg, util.AppKeys.Section):
 			m.active++
 			m.active %= 5
 			m.Tabs.SetActiveIndex(int(m.active))
@@ -64,9 +64,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	m.Configs, cmd = m.Configs.Update(msg)
-	cmds = append(cmds, cmd)
-
-	m.Footer, cmd = m.Footer.Update(msg)
 	cmds = append(cmds, cmd)
 
 	m.Tabs, cmd = m.Tabs.Update(msg)
