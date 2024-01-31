@@ -16,26 +16,23 @@ import (
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
 
-	"github.com/algorand/go-algorand-sdk/v2/types"
-
-	"github.com/algorand/node-ui/messages"
-	"github.com/algorand/node-ui/tui/internal/model"
+	"github.com/algorand/node-ui/tui/args"
+	"github.com/algorand/node-ui/tui/internal/util"
+	"github.com/algorand/node-ui/tui/internal/view/setup"
 )
 
-const host = "0.0.0.0"
-
-func getTeaHandler(model model.Model) bm.Handler {
+func getTeaHandler(model tea.Model) bm.Handler {
 	return func(_ ssh.Session) (tea.Model, []tea.ProgramOption) {
 		return model, []tea.ProgramOption{tea.WithAltScreen(), tea.WithMouseCellMotion()}
 	}
 }
 
 // Start ...
-func Start(port uint64, requestor *messages.Requestor, addresses []types.Address) {
-	model := model.New(requestor, addresses)
+func Start(args args.Arguments) {
+	model := setup.New(args)
 
 	// Run directly
-	if port == 0 {
+	if args.TuiPort == 0 {
 		p := tea.NewProgram(model, tea.WithAltScreen(), tea.WithMouseCellMotion())
 		if _, err := p.Run(); err != nil {
 			fmt.Printf("Error in UI: %v", err)
@@ -53,7 +50,7 @@ func Start(port uint64, requestor *messages.Requestor, addresses []types.Address
 	}
 
 	sshServer, err := wish.NewServer(
-		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
+		wish.WithAddress(fmt.Sprintf("%s:%d", util.Host, args.TuiPort)),
 		wish.WithHostKeyPath(path.Join(dirname, ".ssh/term_info_ed25519")),
 		wish.WithMiddleware(
 			bm.Middleware(getTeaHandler(model)),
@@ -66,7 +63,7 @@ func Start(port uint64, requestor *messages.Requestor, addresses []types.Address
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	log.Printf("Starting SSH server on %s:%d", host, port)
+	log.Printf("Starting SSH server on %s:%d", util.Host, args.TuiPort)
 	go func() {
 		if err = sshServer.ListenAndServe(); err != nil {
 			log.Fatalln(err)
