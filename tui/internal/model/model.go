@@ -71,7 +71,7 @@ func New(requestor *messages.Requestor, addresses []types.Address) Model {
 		Status:        status.New(styles, requestor),
 		Tabs:          tab,
 		BlockExplorer: explorer.New(styles, requestor, initialWidth, 0, initialHeight, tabContentMargin),
-		Configs:       configs.New(tabContentMargin),
+		Configs:       configs.New(requestor, tabContentMargin),
 		Accounts:      accounts.New(styles, requestor, initialHeight, tabContentMargin, addresses),
 		Help:          help.New(),
 		Footer:        footer.New(styles),

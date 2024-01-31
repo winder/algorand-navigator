@@ -9,7 +9,6 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 
 	"github.com/algorand/node-ui/messages"
@@ -29,6 +28,7 @@ type arguments struct {
 	tuiPort          uint64
 	algodURL         string
 	algodToken       string
+	algodAdminToken  string
 	algodDataDir     string
 	addressWatchList []string
 	versionFlag      bool
@@ -39,7 +39,7 @@ func run(args arguments) {
 		fmt.Println(version.LongVersion())
 		os.Exit(0)
 	}
-	request := getRequestorOrExit(args.algodDataDir, args.algodURL, args.algodToken)
+	request := getRequestorOrExit(args.algodDataDir, args.algodURL, args.algodToken, args.algodAdminToken)
 	addresses := getAddressesOrExit(args.addressWatchList)
 	tui.Start(args.tuiPort, request, addresses)
 }
@@ -75,6 +75,14 @@ func makeCommand() *cli.Command {
 				Destination: &args.algodToken,
 			},
 			&cli.StringFlag{
+				Name:        "algod-admin-token",
+				Aliases:     []string{"a"},
+				Usage:       "Algod REST API Admin token.",
+				Value:       "",
+				Sources:     cli.EnvVars("ALGOD_ADMIN_TOKEN"),
+				Destination: &args.algodAdminToken,
+			},
+			&cli.StringFlag{
 				Name:        "algod-data-dir",
 				Aliases:     []string{"d"},
 				Usage:       "Path to Algorand data directory.",
@@ -105,62 +113,60 @@ func makeCommand() *cli.Command {
 	}
 }
 
-func getRequestorOrExit(algodDataDir, url, token string) *messages.Requestor {
+func getRequestor(algodDataDir, url, token, adminToken string) (*messages.Requestor, error) {
 	// Initialize from -d, ALGORAND_DATA, or provided URL/Token
 
 	if algodDataDir != "" && (url != "" || token != "") {
-		fmt.Fprintln(os.Stderr, "Do not use -u/-t with -d.")
-		os.Exit(1)
+		algodDataDir = ""
+		fmt.Println("ignoring ALGORAND_DATA/-d in favor of -u/-t")
 	}
 
 	// If url/token are missing, attempt to use environment variable.
-	if url == "" && token == "" {
-		if algodDataDir == "" {
-			algodDataDir = os.Getenv("ALGORAND_DATA")
-			if algodDataDir != "" {
-				fmt.Println("Using ALGORAND_DATA environment variable.")
-			}
-		}
-
-		if algodDataDir == "" {
-			fmt.Fprintln(os.Stderr, "Algod is not available.\nMust provide url and token with -u/-t or a data directory with -d or the ALGORAND_DATA environment variable.")
-			os.Exit(1)
-		}
-
+	if algodDataDir != "" {
 		netpath := filepath.Join(algodDataDir, "algod.net")
 		tokenpath := filepath.Join(algodDataDir, "algod.token")
+		adminTokenpath := filepath.Join(algodDataDir, "algod.admin.token")
 
 		var netaddrbytes []byte
 		netaddrbytes, err := os.ReadFile(netpath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unable to read URL from file (%s): %s\n", netpath, err.Error())
-			os.Exit(1)
+			return nil, fmt.Errorf("Unable to read URL from file (%s): %s\n", netpath, err.Error())
 		}
 		url = strings.TrimSpace(string(netaddrbytes))
+
 		tokenBytes, err := os.ReadFile(tokenpath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to read Token from file (%s): %s\n", tokenpath, err.Error())
 			os.Exit(1)
 		}
 		token = string(tokenBytes)
+
+		adminTokenBytes, err := os.ReadFile(adminTokenpath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to read Token from file (%s): %s\n", adminTokenpath, err.Error())
+			os.Exit(1)
+		}
+		adminToken = string(adminTokenBytes)
+	}
+
+	if url == "" || token == "" {
+		return nil, fmt.Errorf("must provide a way to get the algod REST API")
 	}
 
 	if !strings.HasPrefix(url, "http") {
 		url = "http://" + url
 	}
 
-	if url == "" || token == "" {
-		fmt.Fprintln(os.Stderr, "Must provide a way to get the algod REST API.")
-		os.Exit(1)
-	}
+	return messages.MakeRequestor(url, token, adminToken, algodDataDir), nil
+}
 
-	client, err := algod.MakeClient(url, token)
+func getRequestorOrExit(algodDataDir, url, token, adminToken string) *messages.Requestor {
+	requestor, err := getRequestor(algodDataDir, url, token, adminToken)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Problem creating client connection: %s\n", err.Error())
+		fmt.Fprintf(os.Stderr, "Problem creating requestor: %s.\n", err.Error())
 		os.Exit(1)
 	}
-
-	return messages.MakeRequestor(client, algodDataDir)
+	return requestor
 }
 
 func getAddressesOrExit(addrs []string) (result []types.Address) {
