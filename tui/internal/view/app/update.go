@@ -6,8 +6,8 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/algorand/node-ui/messages"
-	"github.com/algorand/node-ui/tui/internal/util"
+	"github.com/winder/algorand-navigator/messages"
+	"github.com/winder/algorand-navigator/tui/internal/util"
 )
 
 func networkFromID(genesisID string) string {

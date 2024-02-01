@@ -1,7 +1,4 @@
-# **DISCLAIMER**
-This project is not supported, and is subject to change. There are no compatibility guarantees. It was developed during a hackathon and isn't perfect. If you see any strange artifacts, try resizing the window to help the program re-orient itself.
-
-# Algod Node UI
+# Algorand Navigator
 
 Terminal UI for remote Algorand node management.
 
@@ -19,18 +16,18 @@ With no options, the UI will be displayed instead of starting a service.
 
 ## Local Algod
 ```
-~$ ALGORAND_DATA=path/to/data/dir ./nodeui
+~$ ALGORAND_DATA=path/to/data/dir ./algorand-navigator
 ```
 ## Remote Algod
 ```
-~$ ./nodeui -t <algod api token> -u http://<url>
+~$ ./algorand-navigator -t <algod api token> -u http://<url>
 ```
 
 # Run as a service
 
-The preferred method for running the node UI is as a service running alongside algod. By passing a port using `-p` or `--tui-port` an SSH server is started and can host the UI for multiple clients.
+The preferred method for running the navigator UI is as a service running alongside algod. By passing a port using `-p` or `--tui-port` an SSH server is started and can host the UI for multiple clients.
 
-A tool like [wishlist](https://github.com/charmbracelet/wishlist#wishlist) can be used to interactively select between multiple node deployments. In the screenshot below you can see a sample ssh config file, and the UI wishlist provides to select which nodeui to connect to.
+A tool like [wishlist](https://github.com/charmbracelet/wishlist#wishlist) can be used to interactively select between multiple node deployments. In the screenshot below you can see a sample ssh config file, and the UI wishlist provides to select which navigator to connect to.
 
 ![Wishlist Example](images/wishlist_example.png)
 

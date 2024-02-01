@@ -8,8 +8,8 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/algorand/node-ui/tui/internal/style"
-	"github.com/algorand/node-ui/tui/internal/util"
+	"github.com/winder/algorand-navigator/tui/internal/style"
+	"github.com/winder/algorand-navigator/tui/internal/util"
 )
 
 var defaultstyle = style.DefaultStyles()

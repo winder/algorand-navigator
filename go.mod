@@ -1,4 +1,4 @@
-module github.com/algorand/node-ui
+module github.com/winder/algorand-navigator
 
 go 1.20
 

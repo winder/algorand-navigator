@@ -5,16 +5,16 @@ import (
 	"github.com/kirsle/configdir"
 )
 
-type NodeUIConfigDir struct {
+type NavigatorUIConfigDir struct {
 	Dir string
 	Err error
 }
 
 // MakeConfigCmd creates the config directory.
 func MakeConfigCmd() tea.Msg {
-	configPath := configdir.LocalConfig("nodeui")
+	configPath := configdir.LocalConfig("algorand-navigator")
 	err := configdir.MakePath(configPath) // Ensure it exists.
-	return NodeUIConfigDir{
+	return NavigatorUIConfigDir{
 		Dir: configPath,
 		Err: err,
 	}

@@ -1,12 +1,11 @@
 package footer
 
 import (
-	"github.com/algorand/node-ui/messages"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/algorand/node-ui/tui/internal/style"
+	"github.com/winder/algorand-navigator/messages"
+	"github.com/winder/algorand-navigator/tui/internal/style"
 )
 
 // Model for the footer.
@@ -45,7 +44,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // View is part of the tea.Model interface.
 func (m Model) View() string {
 
-	left := m.style.FooterLeft.Render("Algorand Node UI")
+	left := m.style.FooterLeft.Render("Algorand Navigator UI")
 	//right := m.style.FooterRight.Render(config.GetAlgorandVersion())
 	right := m.style.FooterRight.Render(m.network.NodeVersion)
 	//middleText := fmt.Sprintf("%s (Gensis Hash %s)", m.network.GenesisID, m.network.GenesisHash)

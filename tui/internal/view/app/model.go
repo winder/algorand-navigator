@@ -5,15 +5,15 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/algorand/node-ui/messages"
-	"github.com/algorand/node-ui/tui/internal/bubbles/about"
-	"github.com/algorand/node-ui/tui/internal/bubbles/accounts"
-	"github.com/algorand/node-ui/tui/internal/bubbles/configs"
-	"github.com/algorand/node-ui/tui/internal/bubbles/explorer"
-	"github.com/algorand/node-ui/tui/internal/bubbles/status"
-	"github.com/algorand/node-ui/tui/internal/bubbles/tabs"
-	"github.com/algorand/node-ui/tui/internal/style"
-	"github.com/algorand/node-ui/tui/internal/util"
+	"github.com/winder/algorand-navigator/messages"
+	"github.com/winder/algorand-navigator/tui/internal/bubbles/about"
+	"github.com/winder/algorand-navigator/tui/internal/bubbles/accounts"
+	"github.com/winder/algorand-navigator/tui/internal/bubbles/configs"
+	"github.com/winder/algorand-navigator/tui/internal/bubbles/explorer"
+	"github.com/winder/algorand-navigator/tui/internal/bubbles/status"
+	"github.com/winder/algorand-navigator/tui/internal/bubbles/tabs"
+	"github.com/winder/algorand-navigator/tui/internal/style"
+	"github.com/winder/algorand-navigator/tui/internal/util"
 )
 
 type activeComponent int

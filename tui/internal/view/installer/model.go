@@ -6,8 +6,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/algorand/node-ui/tui/internal/bubbles/about"
-	"github.com/algorand/node-ui/tui/internal/util"
+	"github.com/winder/algorand-navigator/tui/internal/bubbles/about"
+	"github.com/winder/algorand-navigator/tui/internal/util"
 )
 
 type phase int

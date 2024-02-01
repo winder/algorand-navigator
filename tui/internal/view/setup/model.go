@@ -8,13 +8,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/algorand/node-ui/messages"
-	"github.com/algorand/node-ui/tui/args"
-	"github.com/algorand/node-ui/tui/internal/bubbles/footer"
-	"github.com/algorand/node-ui/tui/internal/style"
-	"github.com/algorand/node-ui/tui/internal/util"
-	"github.com/algorand/node-ui/tui/internal/view/app"
-	"github.com/algorand/node-ui/tui/internal/view/installer"
+	"github.com/winder/algorand-navigator/messages"
+	"github.com/winder/algorand-navigator/tui/args"
+	"github.com/winder/algorand-navigator/tui/internal/bubbles/footer"
+	"github.com/winder/algorand-navigator/tui/internal/style"
+	"github.com/winder/algorand-navigator/tui/internal/util"
+	"github.com/winder/algorand-navigator/tui/internal/view/app"
+	"github.com/winder/algorand-navigator/tui/internal/view/installer"
 )
 
 type setupState int
@@ -90,7 +90,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.installer, cmd = m.installer.Update(msg)
 			return m, cmd
 		}
-	case util.NodeUIConfigDir:
+	case util.NavigatorUIConfigDir:
 		if msg.Err != nil {
 			fmt.Fprintf(os.Stderr, "Problem fetching config dir: %v\n", msg.Err)
 			return m, tea.Quit

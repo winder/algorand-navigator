@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/algorand/node-ui/tui/internal/util"
+	"github.com/winder/algorand-navigator/tui/internal/util"
 )
 
 //go:embed update.sh
@@ -73,7 +73,7 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
-	case util.NodeUIConfigDir:
+	case util.NavigatorUIConfigDir:
 		if msg.Err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to get config: %s\n", msg.Err)
 			return m, tea.Quit

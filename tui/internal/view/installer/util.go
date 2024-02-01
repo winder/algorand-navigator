@@ -15,10 +15,10 @@ import (
 )
 
 // getInstallationContent is the static markdown content when
-// Node UI is first run with no configuration.
+// Navigator UI is first run with no configuration.
 func getInstallationContent() string {
 	return `
-# Algorand Node UI Installer :smiley_cat:
+# Algorand Navigator UI Installer :smiley_cat:
 
 You are about to install an Algorand Node. Congratulations!
 If this is a mistake, and you already have a node you'd like
@@ -71,8 +71,8 @@ func renderInstallingContent(width, height int, binDir, dataDir, progress, outpu
 	buf.WriteString(header.Render("\nInstallation in Progress!\n"))
 	buf.WriteString(paragraph.Render(`
 
-The node is not stopped after Node UI is closed
-To stop it yourself use the following command:`))
+The node is not stopped after Node UI is closed unless you use the 's' shortcut.
+Alternatively, stop it yourself with the following command:`))
 	buf.WriteString("\n\n")
 	buf.WriteString(code.Render(binDir + "/goal node stop -d " + dataDir))
 	buf.WriteString("\n\n")
@@ -105,7 +105,7 @@ If a node has been previously installed a software update will be attempted befo
 	joined := lipgloss.JoinVertical(0,
 		header,
 		indent.String(lipgloss.JoinVertical(0,
-			"NodeUI directory: "+configB.Render(configDir),
+			"Navigator directory: "+configB.Render(configDir),
 			"         Network: "+configB.Render(network)),
 			7))
 
