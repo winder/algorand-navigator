@@ -17,6 +17,7 @@ import (
 	"github.com/algorand/node-ui/messages"
 	"github.com/algorand/node-ui/tui/internal/bubbles/explorer"
 	"github.com/algorand/node-ui/tui/internal/style"
+	"github.com/algorand/node-ui/tui/internal/util"
 )
 
 const roundTo = time.Second / 10
@@ -114,6 +115,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.startTime = m.latestTime
 			}
 		}
+
+		util.AppKeys.Catchup.SetEnabled(m.Status.Catchpoint == "")
+		util.AppKeys.AbortCatchup.SetEnabled(m.Status.Catchpoint != "")
 
 		if m.Status.CatchpointTotalAccounts > 0 {
 			m.processedAcctsPct = float64(m.Status.CatchpointProcessedAccounts) / float64(m.Status.CatchpointTotalAccounts)

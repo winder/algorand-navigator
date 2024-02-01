@@ -72,6 +72,14 @@ func makeCommand() *cli.Command {
 				Sources:     cli.EnvVars("ALGORAND_DATA"),
 				Destination: &args.AlgodDataDir,
 			},
+			&cli.StringFlag{
+				Name:        "algod-bin-dir",
+				Aliases:     []string{"b"},
+				Usage:       "Path to Algorand binary directory. This should contain utilities like 'goal' and 'update.sh'.",
+				Value:       "",
+				Sources:     cli.EnvVars("ALGORAND_BIN"),
+				Destination: &args.AlgodBinDir,
+			},
 			&cli.StringSliceFlag{
 				Name:        "watch-list",
 				Aliases:     []string{"w"},

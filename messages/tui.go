@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 
@@ -39,10 +40,11 @@ type Requestor struct {
 	adminToken string
 	token      string
 	dataDir    string
+	binDir     string
 }
 
 // MakeRequestor builds the requestor object.
-func MakeRequestor(url, token, adminToken, dataDir string) *Requestor {
+func MakeRequestor(url, token, adminToken, dataDir, binDir string) *Requestor {
 	client, err := algod.MakeClient(url, token)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Problem creating client connection: %s\n", err.Error())
@@ -55,6 +57,7 @@ func MakeRequestor(url, token, adminToken, dataDir string) *Requestor {
 		adminToken: adminToken,
 		Client:     client,
 		dataDir:    dataDir,
+		binDir:     binDir,
 	}
 }
 
@@ -221,5 +224,39 @@ func (r Requestor) StopFastCatchup(network string) tea.Cmd {
 			panic(err)
 		}
 		return nil
+	}
+}
+
+func (r Requestor) CanShutdown() bool {
+	return r.binDir != "" && r.dataDir != ""
+}
+
+type StopNodeResult struct {
+	Output string
+	Err    error
+}
+
+func MakeStopNodeMsg(r *Requestor) StopNodeMsg {
+	return StopNodeMsg{
+		requestor: r,
+	}
+}
+
+type StopNodeMsg struct {
+	requestor *Requestor
+}
+
+func (snm StopNodeMsg) Stop() tea.Cmd {
+	return snm.requestor.ShutdownNode()
+}
+
+func (r Requestor) ShutdownNode() tea.Cmd {
+	return func() tea.Msg {
+		c := exec.Command(fmt.Sprintf("%s/goal", r.binDir), "node", "stop", "-d", r.dataDir)
+		output, err := c.CombinedOutput()
+		return StopNodeResult{
+			Output: string(output),
+			Err:    err,
+		}
 	}
 }

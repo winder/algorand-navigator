@@ -119,6 +119,7 @@ type installProgress struct {
 	err     error
 	done    bool
 	datadir string
+	bindir  string
 }
 
 func installAndStartNodeReturnDirs(rootDir, network string) (string, string, tea.Cmd) {
@@ -144,7 +145,11 @@ func installAndStartNodeReturnDirs(rootDir, network string) (string, string, tea
 	}
 
 	var b bytes.Buffer
-	c := exec.Command(fmt.Sprintf("%s/update.sh", bin), "-i", "-c", "stable", "-p", bin, "-d", data, "-i", "-g", network)
+	// TODO: when using '-i' the node is re-installed and restarted every time
+	// update.sh is called. This is much slower, but always results in a running
+	// node after the command completes. It would be better to start the node
+	// manually after the script is called.
+	c := exec.Command(fmt.Sprintf("%s/update.sh", bin), "-c", "stable", "-p", bin, "-d", data, "-g", network, "-i")
 	c.Stdout = &b
 	c.Stderr = &b
 
@@ -163,6 +168,7 @@ func installAndStartNodeReturnDirs(rootDir, network string) (string, string, tea
 				err:     err,
 				done:    true,
 				datadir: data,
+				bindir:  bin,
 			}
 		})
 }

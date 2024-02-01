@@ -25,6 +25,7 @@ const (
 // DataDirReady is sent when once the node has been installed and started.
 type DataDirReady struct {
 	DataDir string
+	BinDir  string
 }
 
 type WizardModel struct {
@@ -112,14 +113,14 @@ func (m WizardModel) Update(msg tea.Msg) (WizardModel, tea.Cmd) {
 		m.progress = msg.msg
 		m.outputBuffer = msg.output.String()
 		if msg.done {
-			return m, func() tea.Msg {
-				return DataDirReady{DataDir: msg.datadir}
-			}
+			return m, tea.Tick(2*time.Second, func(_ time.Time) tea.Msg {
+				return DataDirReady{DataDir: msg.datadir, BinDir: msg.bindir}
+			})
 		}
 		m.installingContent = renderInstallingContent(m.width, m.height, m.binDir, m.dataDir, m.progress, m.outputBuffer)
 
 		return m, tea.Tick(50*time.Millisecond, func(t time.Time) tea.Msg {
-			// come back in a minute to append more output.
+			// come back in a moment to append more output.
 			return installProgress{
 				msg:    msg.msg,
 				err:    msg.err,

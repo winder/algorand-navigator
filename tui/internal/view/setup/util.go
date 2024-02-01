@@ -11,7 +11,7 @@ import (
 	"github.com/algorand/node-ui/messages"
 )
 
-func getRequestor(algodDataDir, url, token, adminToken string) (*messages.Requestor, error) {
+func getRequestor(algodDataDir, algodBinDir, url, token, adminToken string) (*messages.Requestor, error) {
 	// Initialize from -d, ALGORAND_DATA, or provided URL/Token
 
 	if algodDataDir != "" && (url != "" || token != "") {
@@ -55,11 +55,11 @@ func getRequestor(algodDataDir, url, token, adminToken string) (*messages.Reques
 		url = "http://" + url
 	}
 
-	return messages.MakeRequestor(url, token, adminToken, algodDataDir), nil
+	return messages.MakeRequestor(url, token, adminToken, algodDataDir, algodBinDir), nil
 }
 
-func getRequestorOrExit(algodDataDir, url, token, adminToken string) *messages.Requestor {
-	requestor, err := getRequestor(algodDataDir, url, token, adminToken)
+func getRequestorOrExit(algodDataDir, algodBinDir, url, token, adminToken string) *messages.Requestor {
+	requestor, err := getRequestor(algodDataDir, algodBinDir, url, token, adminToken)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Problem creating requestor: %s.\n", err.Error())
 		os.Exit(1)
