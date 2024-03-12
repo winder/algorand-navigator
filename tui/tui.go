@@ -16,9 +16,9 @@ import (
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
 
-	"github.com/algorand/node-ui/tui/args"
-	"github.com/algorand/node-ui/tui/internal/util"
-	"github.com/algorand/node-ui/tui/internal/view/setup"
+	"github.com/winder/algorand-navigator/tui/args"
+	"github.com/winder/algorand-navigator/tui/internal/util"
+	"github.com/winder/algorand-navigator/tui/internal/view/setup"
 )
 
 func getTeaHandler(model tea.Model) bm.Handler {

@@ -4,7 +4,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/indent"
 
-	"github.com/algorand/node-ui/tui/internal/util"
+	"github.com/winder/algorand-navigator/tui/internal/util"
 )
 
 // TODO: this function could implement a type and be passed to the tab view.

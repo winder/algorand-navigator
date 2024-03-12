@@ -8,7 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/algorand/node-ui/messages"
+	"github.com/winder/algorand-navigator/messages"
 )
 
 var (

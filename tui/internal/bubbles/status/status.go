@@ -14,10 +14,10 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/client/v2/common/models"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 
-	"github.com/algorand/node-ui/messages"
-	"github.com/algorand/node-ui/tui/internal/bubbles/explorer"
-	"github.com/algorand/node-ui/tui/internal/style"
-	"github.com/algorand/node-ui/tui/internal/util"
+	"github.com/winder/algorand-navigator/messages"
+	"github.com/winder/algorand-navigator/tui/internal/bubbles/explorer"
+	"github.com/winder/algorand-navigator/tui/internal/style"
+	"github.com/winder/algorand-navigator/tui/internal/util"
 )
 
 const roundTo = time.Second / 10

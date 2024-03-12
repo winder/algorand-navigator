@@ -12,6 +12,6 @@ RUN groupadd --gid=999 --system algorand && \
 
 USER algorand
 
-COPY nodeui /usr/local/bin/nodeui
+COPY algorand-navigator /usr/local/bin/algorand-navigator
 
-ENTRYPOINT ["nodeui"]
+ENTRYPOINT ["algorand-navigator"]

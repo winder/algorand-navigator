@@ -8,7 +8,7 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
 
-	"github.com/algorand/node-ui/messages"
+	"github.com/winder/algorand-navigator/messages"
 )
 
 func getRequestor(algodDataDir, algodBinDir, url, token, adminToken string) (*messages.Requestor, error) {

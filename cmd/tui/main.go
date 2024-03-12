@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/urfave/cli/v3"
 	"os"
 
-	"github.com/algorand/node-ui/tui"
-	"github.com/algorand/node-ui/tui/args"
-	"github.com/algorand/node-ui/version"
+	"github.com/urfave/cli/v3"
+
+	"github.com/winder/algorand-navigator/tui"
+	"github.com/winder/algorand-navigator/tui/args"
+	"github.com/winder/algorand-navigator/version"
 )
 
 func main() {
@@ -29,7 +30,7 @@ func run(args args.Arguments) {
 func makeCommand() *cli.Command {
 	var args args.Arguments
 	return &cli.Command{
-		Name:  "node-ui",
+		Name:  "navigator",
 		Usage: "Launch the Algorand Node UI.",
 		Flags: []cli.Flag{
 			&cli.Uint64Flag{

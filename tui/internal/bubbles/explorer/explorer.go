@@ -15,9 +15,9 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 
-	"github.com/algorand/node-ui/messages"
-	"github.com/algorand/node-ui/tui/internal/style"
-	"github.com/algorand/node-ui/tui/internal/util"
+	"github.com/winder/algorand-navigator/messages"
+	"github.com/winder/algorand-navigator/tui/internal/style"
+	"github.com/winder/algorand-navigator/tui/internal/util"
 )
 
 type state int
